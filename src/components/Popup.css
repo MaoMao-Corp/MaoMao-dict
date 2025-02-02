@@ -1,0 +1,37 @@
+.word{
+    font-size: 20px;
+    margin-bottom: 0;
+    margin-top: 0;
+    color: white
+}
+.word::first-letter
+{
+    text-transform: capitalize;
+}
+
+.sentence
+{
+    margin-top: 0;
+}
+
+
+.popup-scroll::-webkit-scrollbar {
+    width: 5px; 
+}
+  
+.popup-scroll::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0); 
+    width: 10px;
+}
+  
+.popup-scroll::-webkit-scrollbar-thumb {
+    background-color: #2d2d2d; /* Color semitransparente para la thumb */
+    border-radius: 10px;
+
+    background-clip:content-box;
+  }
+
+.definition
+{
+    color: white;
+}
