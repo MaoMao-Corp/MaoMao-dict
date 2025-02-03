@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import Popup from "./components/Popup";
+import Popup from "./Popup";
+import "./Popup.css"
 
 // Verifica si ya existe un contenedor para el popup y si no, créalo
 let container = document.getElementById("popup-container");

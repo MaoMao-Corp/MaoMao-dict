@@ -10,6 +10,12 @@
         "matches": ["<all_urls>"],
         "js": ["content.js"]
       }
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": ["src/Popup.css"],
+        "matches" : ["<all_urls>"]
+      }
     ]
   }
   

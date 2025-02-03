@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import './Popup.css'
+import '/src/Popup.css'
 
 function Popup() {
   const [selectedText, setSelectedText] = useState("");

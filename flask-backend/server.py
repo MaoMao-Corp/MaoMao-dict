@@ -4,12 +4,13 @@ from openai import OpenAI
 import os
 
 app = Flask(__name__)
-CORS(app, resources={r"/define": {"origins":"chrome-extensions:// hpcoifddgehildncbdlodgjbhallplkb"}})
+CORS(app)
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 @app.route("/define", methods=["POST"])
 def define():
+    
     data = request.get_json()
     word = data.get("word")
     sentence = data.get("sentence")
@@ -23,18 +24,14 @@ def define():
                 {"role": "developer", "content": "You are a helpful assistant."},
                 {
                     "role": "user",
-                    "content": f"Explain the meaning of the word '{word}' in the sentence '{sentence}' in {lang}"
+                    "content": f"Explain the meaning of the word '{word}' in the sentence '{sentence}' in {lang}, be concise"
                 }
             ]
         )
+        print(completion.choices[0].message.content)
         return jsonify({"definition": completion.choices[0].message.content}), 200
     else:
         return jsonify({"error": "Faltan parámetros: 'word' y 'sentence'"}), 400
 
 if __name__ == "__main__":
-    app.run()  
-
-
-
-
-
+    app.run()
