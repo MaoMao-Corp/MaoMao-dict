@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import '/src/Popup.css'
+import './Popup.css'
 
 function Popup() {
   const [selectedText, setSelectedText] = useState("");
@@ -45,12 +45,17 @@ function Popup() {
   const extractSentence = (text, offset) => {
     let start = offset;
     let end = offset;
-
-    while (start > 0 && !/[.!?]/.test(text[start - 1])) start--;
-    while (end < text.length && !/[.!?]/.test(text[end])) end++;
-
+  
+    while (start > 0 && !/[.!?]/.test(text[start - 1]) && text[start - 1] !== '\n') {
+      start--;
+    }
+      while (end < text.length && !/[.!?]/.test(text[end]) && text[end] !== '\n') {
+      end++;
+    }
+  
     return text.slice(start, end).trim();
   };
+  
 
   const fetchDefinition = async (word, sentence) => {
     try {
