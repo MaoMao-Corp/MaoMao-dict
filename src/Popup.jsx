@@ -1,5 +1,7 @@
+import ReactMarkdown from "react-markdown"
 import React, { useState, useEffect } from "react";
 import './Popup.css'
+
 
 function Popup() {
   const [selectedText, setSelectedText] = useState("");
@@ -85,8 +87,8 @@ function Popup() {
     >
       <h2 className="word">{selectedText}</h2>
       <p className="sentence" style={{ fontStyle: "italic", color: "#888" }}>{contextSentence}</p>
-      <p className="definition">{definition}</p>
-    </div>
+      <ReactMarkdown className="definition">{definition}</ReactMarkdown>
+      </div>
   );
 }
 
