@@ -1,13 +1,27 @@
+.popup-header
+{
+    display: flex;
+}
+
 .word{
     font-size: 20px;
     margin-bottom: 0;
     margin-top: 0;
-    color: white
 }
 .word::first-letter
 {
     text-transform: capitalize;
 }
+
+.audio-button
+{
+    height: 20px;
+    width: auto;
+    margin-left: 10px;  
+    margin-top: 5px;
+    cursor: pointer;
+}
+
 
 .sentence
 {
@@ -30,8 +44,4 @@
 
     background-clip:content-box;
   }
-
-.definition
-{
-    color: white;
-}
+  
