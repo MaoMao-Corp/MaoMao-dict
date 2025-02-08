@@ -1,7 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import Popup from "./Popup";
-
+import Popup from "./component/Popup";
+import "./style/index.css"
 // Crea un contenedor para la extensión en la página actual
 const container = document.createElement("div");
 container.id = "popup-dictionary-container";

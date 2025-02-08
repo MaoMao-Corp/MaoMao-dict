@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Popup Dictionary",
-  "version": "1.0",
-  "description": "Extensión que muestra la definición de palabras al seleccionarlas.",
+  "name": "Miau Miau dict",
+  "version": "2.0",
+  "description": "Miau miau meow mao mao 🐱",
   "permissions": [
     "activeTab"
   ],
@@ -17,5 +17,10 @@
   "web_accessible_resources": [{
     "resources": ["assets/*"],
     "matches": ["<all_urls>"]
-  }]
+  }],
+  "icons":{
+    "16": "icon.png",
+    "48": "icon.png",
+    "128":"icon.png"
+  }
 }

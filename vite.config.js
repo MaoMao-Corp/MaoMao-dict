@@ -7,17 +7,20 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        // Define la entrada para el content script
-        content: resolve(__dirname, 'src/content.jsx')
-        // Si tienes más entradas, como un popup o background, agrégalas aquí.
+        content: resolve(__dirname, 'src/content.jsx'), // Content script
       },
       output: {
-        // Configura el nombre de los archivos según necesites
         entryFileNames: "assets/[name].js",
         chunkFileNames: "assets/[name].js",
-        assetFileNames: "assets/[name].[ext]"      }
+        assetFileNames: "assets/[name].[ext]" // Los assets (imágenes) estarán en dist/assets/
+      }
     },
-    outDir: "dist/", // Puedes colocar tus archivos compilados en "dist/assets"
+    outDir: "dist/", // Los archivos compilados irán aquí
     emptyOutDir: true
+  },
+  resolve: {
+    alias: {
+      '@assets': resolve(__dirname, 'src/assets'), // Atajo para importar imágenes
+    }
   }
 });

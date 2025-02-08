@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import React, { useState, useEffect, useRef } from "react";
-import './Popup.css';
+import speaker from '../icons/speaker.png';
+import "../style/Popup.css"
 
 function Popup() {
   const [selectedText, setSelectedText] = useState("");
@@ -127,7 +128,7 @@ function Popup() {
       <div className="popup-header">
         <h2 className="word">{selectedText}</h2>
         {codeLang && <img
-          src="/speaker.png"
+          src={speaker}
           alt="sound button"
           className="audio-button"
           onClick={handleSound}
