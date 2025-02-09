@@ -4,7 +4,8 @@
 audio de las frases enteras
 guardar words/phrases dependiendo de el boton
 
-no permitir generar dos veces el mismo audio
 no añadir palabras conocidas
 
-css Custom prompt
+css options page
+
+crear deck si no existe

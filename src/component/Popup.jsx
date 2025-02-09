@@ -49,6 +49,7 @@ function Popup() {
         });
 
       } else {
+        // undo everything when pop up dissapears
         setIsVisible(false);
         setDefinition("Thinking...");
         setSelectedText("");
@@ -93,22 +94,8 @@ function Popup() {
       return "Error al obtener la definición.";
     }
   };
-
-  const handleSound = async () => {
-    if (!selectedText.trim()) return alert("Por favor, ingresa un texto");
-  
-    try {
-      const response = await fetch("https://miau-miau-dict-backend.onrender.com/tts/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: selectedText, code:codeLang}),
-      });
-  
-      const data = await response.json();
-      if (data.audio) {
-        // Convertir la cadena base64 a binario
-        setAudio(data.audio)
-        const binaryData = atob(data.audio); // Decodificar base64 a binario
+  const play_audio = (audio64) => {
+    const binaryData = atob(audio64); // Decodificar base64 a binario
         const arrayBuffer = new Uint8Array(binaryData.length);
         for (let i = 0; i < binaryData.length; i++) {
           arrayBuffer[i] = binaryData.charCodeAt(i);
@@ -120,19 +107,43 @@ function Popup() {
         // Crear un objeto de audio y reproducirlo directamente
         const audio = new Audio(url);
         audio.play();
-      }
-    } catch (error) {
-      console.error("Error al obtener el audio:", error);
+  }
+  const handleSound = async () => {
+
+    if (audio)
+    {
+      play_audio(audio);
+      console.log("no new audio generated")
+      return null;
     }
-  };
+    try {
+      const response = await fetch("https://miau-miau-dict-backend.onrender.com/tts/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: selectedText, code:codeLang}),
+      });
+  
+      const data = await response.json();
+      if (data.audio) {
+        setAudio(data.audio)
+        play_audio(data.audio)
+        console.log("new audio generated")
+      }
+
+  } catch(error)
+  {console.log("error while handling sound",error)}
+  }
   
   const handleAdd = async () => {
     try {
+      chrome.storage.local.get(["miauDeckInput", "miauAnkiInput"], async (data)=> {
+      const structure = data.miauAnkiInput;
+      const deckName = data.miauDeckInput;
       // Get anki card's back
       const response1 = await fetch("https://miau-miau-dict-backend.onrender.com/define/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ word: selectedText, sentence: contextSentence}),
+        body: JSON.stringify({ word: selectedText, sentence: contextSentence, structure: structure}),
       });
       const data1 = await response1.json();
       const clean_data = await data1[0] 
@@ -156,6 +167,7 @@ function Popup() {
       }
       // si ya hay audio, solo refedinir
       else{
+        console.log("no new audio")
         var audioFile = audio
       }
 
@@ -185,7 +197,7 @@ function Popup() {
           "version": 6,
           "params": {
             "note": {
-              "deckName": "Predeterminado",
+              "deckName": deckName,
               "modelName": "Básico",
               "fields": {
                 "Anverso": `[sound:${audioFilename}] ${selectedText}`,
@@ -203,7 +215,7 @@ function Popup() {
       const addNoteResult = await addNoteResponse.json();
       console.log(addNoteResult); // todo correcto
 
-    } 
+    })} 
     // catch error
     catch (error) {
       console.error("Error al agregar la flashcard:", error);
