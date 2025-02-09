@@ -1,8 +1,10 @@
 # Miau Miau dict
 
 ## TODO
-Logo a mejor resolucion
+audio de las frases enteras
+guardar words/phrases dependiendo de el boton
+
+no permitir generar dos veces el mismo audio
+no añadir palabras conocidas
+
 css Custom prompt
-anki connect
-css anki connect
-cambiar nombre web-service

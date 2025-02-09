@@ -1,7 +1,9 @@
 import ReactMarkdown from "react-markdown";
 import React, { useState, useEffect, useRef } from "react";
 import '../style/Popup.css';
-import speaker from "../icons/speaker.png"
+import speaker from "../media/speaker.png"
+import add from "../media/add.png"
+
 
 function Popup() {
   const [selectedText, setSelectedText] = useState("");
@@ -9,7 +11,8 @@ function Popup() {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [definition, setDefinition] = useState("Thinking...");
-
+  const [knownWord, setKnownWord] = useState(true)
+  const [audio, setAudio] = useState(null)
   const [codeLang, setCodeLang] = useState("")
   
   // Creamos un ref para el popup
@@ -51,6 +54,9 @@ function Popup() {
         setSelectedText("");
         setContextSentence("");
         setCodeLang("")
+        //setKnownWord(false)
+        setAudio(null)
+        setCodeLang("")
       }
     };
 
@@ -73,7 +79,7 @@ function Popup() {
 
   const fetchDefinition = async (word, sentence, structure) => {
     try {
-      const response = await fetch("https://mao-dict-backend.onrender.com/define/", {
+      const response = await fetch("https://miau-miau-dict-backend.onrender.com/define/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ word, sentence, structure}),
@@ -92,7 +98,7 @@ function Popup() {
     if (!selectedText.trim()) return alert("Por favor, ingresa un texto");
   
     try {
-      const response = await fetch("https://mao-dict-backend.onrender.com/tts/", {
+      const response = await fetch("https://miau-miau-dict-backend.onrender.com/tts/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: selectedText, code:codeLang}),
@@ -101,6 +107,7 @@ function Popup() {
       const data = await response.json();
       if (data.audio) {
         // Convertir la cadena base64 a binario
+        setAudio(data.audio)
         const binaryData = atob(data.audio); // Decodificar base64 a binario
         const arrayBuffer = new Uint8Array(binaryData.length);
         for (let i = 0; i < binaryData.length; i++) {
@@ -118,6 +125,90 @@ function Popup() {
       console.error("Error al obtener el audio:", error);
     }
   };
+  
+  const handleAdd = async () => {
+    try {
+      // Get anki card's back
+      const response1 = await fetch("https://miau-miau-dict-backend.onrender.com/define/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ word: selectedText, sentence: contextSentence}),
+      });
+      const data1 = await response1.json();
+      const clean_data = await data1[0] 
+      const back = clean_data.d // reverso de la carta
+
+      // si no se ha generado el audio, se genera ahora,
+      if (!audio)
+      {
+        try {
+          const audioResponse = await fetch("https://miau-miau-dict-backend.onrender.com/tts/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: selectedText, code:codeLang}),
+          });
+          console.log("fetch hecho")
+          const data = await audioResponse.json();
+          if (data.audio) {var audioFile = data.audio};
+        } catch (error) {
+          console.error("Error al obtener el audio:", error);
+        }
+      }
+      // si ya hay audio, solo refedinir
+      else{
+        var audioFile = audio
+      }
+
+      // Guardar audio en la carpeta Anki
+      const audioFilename = `${selectedText}_test.mp3`
+      const storeMediaResponse = await fetch("http://localhost:8765", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeMediaFile",
+          version: 6,
+          params: { filename: audioFilename, data: audioFile },
+        }),
+      });
+      const storeMediaResult = await storeMediaResponse.json();
+      // check for errors
+      if (!storeMediaResult.result) {
+        console.error("Error al guardar el audio en Anki");
+        return;
+      }
+      // generar new note
+      const addNoteResponse = await fetch("http://localhost:8765", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({
+          "action": "addNote",
+          "version": 6,
+          "params": {
+            "note": {
+              "deckName": "Predeterminado",
+              "modelName": "Básico",
+              "fields": {
+                "Anverso": `[sound:${audioFilename}] ${selectedText}`,
+                "Reverso": back
+              },
+              "tags": ["miaumiau"],
+              "options": {
+                "allowDuplicate": false
+              }
+            }
+          }
+        }
+        )
+      });
+      const addNoteResult = await addNoteResponse.json();
+      console.log(addNoteResult); // todo correcto
+
+    } 
+    // catch error
+    catch (error) {
+      console.error("Error al agregar la flashcard:", error);
+    }
+  }
   
   if (!isVisible) return null;
 
@@ -137,9 +228,14 @@ function Popup() {
         {codeLang && <img
           src={speaker}
           alt="sound button"
-          className="audio-button"
+          className="audio-img"
           onClick={handleSound}
         />}
+        {knownWord && <img
+        src={add}
+        alt="add button"
+        className="add-img"
+        onClick={()=>handleAdd(selectedText, contextSentence, audio)}></img> }
       </div>
       <p className="sentence" style={{ fontStyle: "italic", color: "#888" }}>
         {contextSentence}

@@ -5,7 +5,8 @@
   "description": "Miau miau meow mao mao 🐱",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "http://localhost:3000/"
   ],
   "background" : {
     "service_worker":"assets/background.js"
@@ -23,9 +24,9 @@
     "matches": ["<all_urls>"]
   }],
   "icons":{
-    "16": "icon.png",
-    "48": "icon.png",
-    "128":"icon.png"
+    "16": "icons/icon.png",
+    "48": "icons/icon.png",
+    "128":"icons/icon.png"
   },
   "action": {
     "default_title": "Miau Miau dict"
