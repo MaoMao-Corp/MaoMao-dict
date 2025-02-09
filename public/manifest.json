@@ -4,8 +4,12 @@
   "version": "2.0",
   "description": "Miau miau meow mao mao 🐱",
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "storage"
   ],
+  "background" : {
+    "service_worker":"assets/background.js"
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
@@ -22,5 +26,8 @@
     "16": "icon.png",
     "48": "icon.png",
     "128":"icon.png"
+  },
+  "action": {
+    "default_title": "Miau Miau dict"
   }
 }

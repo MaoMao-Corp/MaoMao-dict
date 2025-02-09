@@ -1,7 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import React, { useState, useEffect, useRef } from "react";
-import speaker from '../icons/speaker.png';
-import "../style/Popup.css"
+import '../style/Popup.css';
+import speaker from "../icons/speaker.png"
 
 function Popup() {
   const [selectedText, setSelectedText] = useState("");
@@ -9,7 +9,9 @@ function Popup() {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [definition, setDefinition] = useState("Thinking...");
+
   const [codeLang, setCodeLang] = useState("")
+  
   // Creamos un ref para el popup
   const popupRef = useRef(null);
 
@@ -37,9 +39,12 @@ function Popup() {
           top: rect.top + window.scrollY,
           left: rect.right + window.scrollX,
         });
+        
+        chrome.storage.local.get("miauPrompt", async (data)=> {
+          const def = await fetchDefinition(selectedWord, sentence, data.miauPrompt);
+          setDefinition(def);
+        });
 
-        const def = await fetchDefinition(selectedWord, sentence);
-        setDefinition(def);
       } else {
         setIsVisible(false);
         setDefinition("Thinking...");
@@ -66,17 +71,19 @@ function Popup() {
     return text.slice(start, end).trim();
   };
 
-  const fetchDefinition = async (word, sentence) => {
+  const fetchDefinition = async (word, sentence, structure) => {
     try {
-      const response = await fetch("https://get-definition.onrender.com/define", {
+      const response = await fetch("https://mao-dict-backend.onrender.com/define/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ word, sentence }),
+        body: JSON.stringify({ word, sentence, structure}),
       });
       const data = await response.json();
-      setCodeLang(data.c)
-      return data.d;
-    } catch (error) {
+      const clean_data = await data[0]
+      setCodeLang(clean_data.c)
+      return clean_data.d;
+    } 
+    catch (error) {
       return "Error al obtener la definición.";
     }
   };
@@ -85,7 +92,7 @@ function Popup() {
     if (!selectedText.trim()) return alert("Por favor, ingresa un texto");
   
     try {
-      const response = await fetch("https://tts-back.onrender.com/tts/", {
+      const response = await fetch("https://mao-dict-backend.onrender.com/tts/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: selectedText, code:codeLang}),
