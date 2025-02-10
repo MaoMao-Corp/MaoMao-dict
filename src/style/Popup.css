@@ -42,16 +42,32 @@
     color: white;
 }
 
-.popup-scroll::-webkit-scrollbar {
+.popup-bubble {
+  position: absolute;
+  background-color: #212121;
+  border: 3px solid #313131;
+  border-radius: 21px 21px 21px 0px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+  z-index: 1000;
+  font-size: 12px;
+  max-width: 300px;
+  max-height: 140px;
+  overflow-y: auto;
+  padding-right: 15px;
+  padding: 10px;
+}
+
+
+.popup-bubble::-webkit-scrollbar {
     width: 5px; 
 }
   
-.popup-scroll::-webkit-scrollbar-track {
+.popup-bubble::-webkit-scrollbar-track {
     background: rgba(0,0,0,0); 
     width: 10px;
 }
   
-.popup-scroll::-webkit-scrollbar-thumb {
+.popup-bubble::-webkit-scrollbar-thumb {
     background-color: #2d2d2d; /* Color semitransparente para la thumb */
     border-radius: 10px;
 
