@@ -121,7 +121,37 @@ function Popup() {
     {console.error("Error while getting audio:", error)}
   }
   
-
+  const getFieldNames = async () => {
+    const modelNamesResponse = await fetch("http://localhost:8765/", 
+      {
+        method : "POST",
+        headers : {"Content-Type":"application/json"},
+        body : JSON.stringify({
+          action: "modelNames",
+          version: 6
+        })
+      }
+    )
+    const modelNamesResult = await modelNamesResponse.json()
+    const modelNames = await modelNamesResult.result
+    const basic = await modelNames[0]
+    const modelFieldResponse = await fetch("http://localhost:8765/", 
+      {
+        method : "POST",
+        headers : {"Content-Type":"application/json"},
+        body : JSON.stringify({
+          action: "modelFieldNames",
+          version: 6,
+          params : {
+            "modelName" : basic
+          }
+        })
+      }
+    )
+    const modelFieldResult = await modelFieldResponse.json()
+    const modelField = await modelFieldResult.result
+    return [...modelField, basic ]
+  }
   // localhost:8765 (anki) related
   const storeMediaFiles = async (filename, file) => {
     const storeMediaResponse = await fetch("http://localhost:8765", {
@@ -136,8 +166,11 @@ function Popup() {
     const storeMediaResult = await storeMediaResponse.json();
     if (!storeMediaResult.result) console.error("Error while storing media files")
   }
-  const addNote = async (deckName, audioFilename, word, back) => {
+  const addNote = async (deckName, audioFilename, word, back, fields) => {
     try{
+      const frontKey = fields[0]
+      const backKey = fields[1]
+      const modelName = fields[2]
       const addNoteResponse = await fetch("http://localhost:8765", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
@@ -147,10 +180,10 @@ function Popup() {
           "params": {
             "note": {
               "deckName": deckName,
-              "modelName": "Básico",
+              "modelName": modelName,
               "fields": {
-                "Anverso": `[sound:${audioFilename}] ${word}`,
-                "Reverso": back
+                [frontKey]: `[sound:${audioFilename}] ${word}`,
+                [backKey]: back
               },
               "tags": ["miaumiau"],
               "options": {
@@ -214,7 +247,8 @@ function Popup() {
         }
         storeMediaFiles(audioFilename, audioFile) // self-explanatory
         // generar new note
-        noteID = await addNote(deckName, audioFilename, selectedText, back)
+        const fieldNames = await getFieldNames()
+        noteID = await addNote(deckName, audioFilename, selectedText, back, fieldNames)
         console.log(noteID)
     })} 
     // catch error
