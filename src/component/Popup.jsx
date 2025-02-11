@@ -14,7 +14,7 @@ function Popup() {
   const [knownWord, setKnownWord] = useState(false)
   const [audio, setAudio] = useState(null)
   const [codeLang, setCodeLang] = useState("")
-  
+  const [addError, setAddError] = useState(false)
   // Creamos un ref para el popup
   const popupRef = useRef(null);
 
@@ -55,9 +55,10 @@ function Popup() {
         setSelectedText("");
         setContextSentence("");
         setCodeLang("")
-        //setKnownWord(false)
+        setKnownWord(false)
         setAudio(null)
         setCodeLang("")
+        setAddError(false)
       }
     };
 
@@ -288,11 +289,12 @@ function Popup() {
         // generar new note
         const fieldNames = await getFieldNames()
         noteID = await addNote(deckName, audioFilename, selectedText, contextSentence, FrontStruct, back, fieldNames)
-        console.log(noteID)
-        setKnownWord(true)
+        if (!noteID) setAddError(true)
+        else setKnownWord(true)
     })} 
     // catch error
     catch (error) {
+      setAddError(true)
       console.error("Error while adding card to anki: ", error);
     }
   }
@@ -328,6 +330,14 @@ function Popup() {
         width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M5 12L10 17L20 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>}
+        {
+          addError && <svg
+          className="error-img"
+          width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <line x1="10" y1="10" x2="90" y2="90" stroke="white" stroke-width="20" stroke-linecap="round"/>
+          <line x1="90" y1="10" x2="10" y2="90" stroke="white" stroke-width="20" stroke-linecap="round"/>
+        </svg>
+        }
       </div>
       <p className="sentence" style={{ fontStyle: "italic", color: "#888" }}>
         {contextSentence}

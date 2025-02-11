@@ -40,7 +40,13 @@
     margin-left: auto;
 }
 
-
+.error-img
+{
+    height: 15px;
+    width: auto;
+    margin-right: 0px;
+    margin-left: auto;
+}
 
 .sentence
 {
