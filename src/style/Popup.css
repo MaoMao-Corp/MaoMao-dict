@@ -32,6 +32,16 @@
     cursor: pointer;
 }
 
+.tick-img
+{
+    height: 20px;
+    width: auto;
+    margin-right: 0px;
+    margin-left: auto;
+}
+
+
+
 .sentence
 {
     margin-top: 0;

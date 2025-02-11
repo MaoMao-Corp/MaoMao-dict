@@ -9,10 +9,12 @@
 <body>
   <div class="container">
     <h1>Customization</h1>
-    <p>Reserved words: <code>$SENTENCE</code>, <code>$WORD</code></p>
+    <p>Reserved words: <code>$SENTENCE</code>, <code>$WORD</code>, <code>$AUDIO</code></p>
     <textarea id="promptInput" placeholder="Escribe tu prompt aquí...">for '$SENTENCE' explain '$WORD' extremely brief</textarea>
     <textarea id="deckInput" placeholder="Escribe tu deck aquí...">Default</textarea>
-    <textarea id="ankiInput" placeholder="Escribe tu prompt de anki cards aquí...">create back of an anki card of the meaning of "$WORD" in "$SENTENCE" very brief</textarea>
+    <textarea id="ankiFrontInput" placeholder="Escribe tu prompt de anki cards aquí...">$SOUND $SENTENCE ($WORD)</textarea>
+    <textarea id="ankiBackInput" placeholder="Escribe tu prompt de anki cards aquí...">create back of an anki card of the meaning of "$WORD" in "$SENTENCE" very brief</textarea>
+
     <button id="savePrompt">Save</button>
   </div>
   <script src="options.js"></script>

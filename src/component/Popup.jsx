@@ -11,7 +11,7 @@ function Popup() {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [definition, setDefinition] = useState("Thinking...");
-  const [knownWord, setKnownWord] = useState(true)
+  const [knownWord, setKnownWord] = useState(false)
   const [audio, setAudio] = useState(null)
   const [codeLang, setCodeLang] = useState("")
   
@@ -44,7 +44,7 @@ function Popup() {
         });
         
         chrome.storage.local.get("popupPrompt", async (data)=> {
-          const def = await getDefinition(selectedWord, sentence, data.popupPrompt);
+          const def = await getDefinition(selectedWord, sentence, data.popupPrompt, true); // md (make it an option)
           setDefinition(def);
         });
 
@@ -79,21 +79,21 @@ function Popup() {
   };
 
   // /define/ endpoint related
-  const fetchCompletion = async (word, sentence, structure) =>
+  const fetchCompletion = async (word, sentence, structure, md) =>
   {
     const response = await fetch("https://miau-miau-dict-backend.onrender.com/define/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word, sentence, structure}),
+      body: JSON.stringify({ word, sentence, structure, md}),
     });
     const result = await response.json()
     const completion = await result[0]
     setCodeLang(completion.c)
     return completion.d
   }
-  const getDefinition = async (word, sentence, structure) => {
+  const getDefinition = async (word, sentence, structure, md) => {
     try {
-      const def = await fetchCompletion(word, sentence, structure)
+      const def = await fetchCompletion(word, sentence, structure, md)
       return def
     } 
     catch (error) {
@@ -121,6 +121,36 @@ function Popup() {
     {console.error("Error while getting audio:", error)}
   }
   
+  const getDecks = async () => {
+    const decksResponse = await fetch("http://localhost:8765/", {
+      method : "POST",
+      headers : {"Content-Type": "application/json"},
+      body : JSON.stringify({
+        action: "deckNames",
+        version: 6
+      })
+    })
+    const decksResult = await decksResponse.json()
+    const decks = await decksResult.result
+    return decks
+  }
+
+  const createDeck = async (name) => {
+    const createDeckResponse = await fetch("http://localhost:8765/", 
+      {
+        method : "POST",
+        headers : {"Content-Type":"application/json"},
+        body : JSON.stringify({
+          action: "createDeck",
+          version: 6,
+          params: {
+            deck : name
+          }
+        })
+      }
+    )
+  }
+
   const getFieldNames = async () => {
     const modelNamesResponse = await fetch("http://localhost:8765/", 
       {
@@ -166,11 +196,14 @@ function Popup() {
     const storeMediaResult = await storeMediaResponse.json();
     if (!storeMediaResult.result) console.error("Error while storing media files")
   }
-  const addNote = async (deckName, audioFilename, word, back, fields) => {
+  const addNote = async (deckName, audioFilename, word, sentence, frontStruct, back, fields) => {
     try{
       const frontKey = fields[0]
       const backKey = fields[1]
       const modelName = fields[2]
+
+      const front = frontStruct.replace("$SOUND", `[sound:${audioFilename}]`).replace("$WORD", `${word}`).replace("$SENTENCE", `${sentence}`);
+
       const addNoteResponse = await fetch("http://localhost:8765", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
@@ -182,7 +215,7 @@ function Popup() {
               "deckName": deckName,
               "modelName": modelName,
               "fields": {
-                [frontKey]: `[sound:${audioFilename}] ${word}`,
+                [frontKey]: front,
                 [backKey]: back
               },
               "tags": ["miaumiau"],
@@ -217,7 +250,6 @@ function Popup() {
         audio.play();
   }
 
-
   // handle buttons
   const handleSound = async () => {
     if (audio) play_audio(audio);
@@ -229,14 +261,15 @@ function Popup() {
   }  
   const handleAdd = async () => {
     try {
-      chrome.storage.local.get(["deckInput", "ankiPrompt"], async (data)=> {
+      chrome.storage.local.get(["deckInput","ankiFrontPrompt", "ankiBackPrompt"], async (data)=> {
         // retrieve local variables
-        const struct = data.ankiPrompt;
-        const deckName = data.deckInput;
+        const deckName = data.deckInput.replace("$SOUND","").replace("$SENTENCE", contextSentence).replace("$WORD", selectedText);
+        const FrontStruct = data.ankiFrontPrompt
+        const backStruct = data.ankiBackPrompt;
+
         const audioFilename = `${selectedText}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")
-        console.log(audioFilename)
         // Get anki card's back
-        const back = await fetchCompletion(selectedText, contextSentence, struct)
+        const back = await fetchCompletion(selectedText, contextSentence, backStruct, false) //no markdown (make it an option)
 
         // si no se ha generado el audio, se genera ahora,
         if (!audio) {
@@ -246,10 +279,17 @@ function Popup() {
           var audioFile = audio
         }
         storeMediaFiles(audioFilename, audioFile) // self-explanatory
+
+        const deckNames = await getDecks()
+        if (!deckNames.includes(deckName)) {
+          await createDeck(deckName)
+        }
+
         // generar new note
         const fieldNames = await getFieldNames()
-        noteID = await addNote(deckName, audioFilename, selectedText, back, fieldNames)
+        noteID = await addNote(deckName, audioFilename, selectedText, contextSentence, FrontStruct, back, fieldNames)
         console.log(noteID)
+        setKnownWord(true)
     })} 
     // catch error
     catch (error) {
@@ -277,11 +317,17 @@ function Popup() {
           className="audio-img"
           onClick={handleSound}
         />}
-        {knownWord && <img
+
+        {!knownWord && <img
         src={add}
         alt="add button"
         className="add-img"
         onClick={()=>handleAdd(selectedText, contextSentence, audio)}></img> }
+        {knownWord &&  <svg
+        className="tick-img"
+        width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 12L10 17L20 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>}
       </div>
       <p className="sentence" style={{ fontStyle: "italic", color: "#888" }}>
         {contextSentence}

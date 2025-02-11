@@ -2,10 +2,9 @@
 
 ## TODO
 guardar words/phrases dependiendo de el boton
-
-custom anverso de la carta
+markdown toggle
 
 no añadir palabras conocidas
-crear deck si no existe
 
+# pro
 permitir non-basic mazos
