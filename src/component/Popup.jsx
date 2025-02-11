@@ -320,12 +320,12 @@ function Popup() {
           onClick={handleSound}
         />}
 
-        {!knownWord && <img
+        {(!knownWord && !addError) && <img
         src={add}
         alt="add button"
         className="add-img"
         onClick={()=>handleAdd(selectedText, contextSentence, audio)}></img> }
-        {knownWord &&  <svg
+        {(knownWord && !addError) &&  <svg
         className="tick-img"
         width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M5 12L10 17L20 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
