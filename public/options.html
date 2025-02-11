@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Configuración de la Extensión</title>
+  <title>Configuration page</title>
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <div class="container">
-    <h1>Configuración</h1>
+    <h1>Customization</h1>
     <p>Reserved words: <code>$SENTENCE</code>, <code>$WORD</code></p>
-    <textarea id="promptInput" placeholder="Escribe tu prompt aquí..."></textarea>
-    <textarea id="deckInput" placeholder="Escribe tu deck aquí..."></textarea>
-    <textarea id="ankiInput" placeholder="Escribe tu prompt de anki cards aquí..."></textarea>
-    <button id="savePrompt">Guardar</button>
+    <textarea id="promptInput" placeholder="Escribe tu prompt aquí...">for '$SENTENCE' explain '$WORD' extremely brief</textarea>
+    <textarea id="deckInput" placeholder="Escribe tu deck aquí...">Default</textarea>
+    <textarea id="ankiInput" placeholder="Escribe tu prompt de anki cards aquí...">create back of an anki card of the meaning of "$WORD" in "$SENTENCE" very brief</textarea>
+    <button id="savePrompt">Save</button>
   </div>
   <script src="options.js"></script>
 </body>

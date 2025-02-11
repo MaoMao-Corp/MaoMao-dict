@@ -2,11 +2,10 @@
   "manifest_version": 3,
   "name": "Miau Miau dict",
   "version": "2.0",
-  "description": "Miau miau meow mao mao 🐱",
+  "description": "Miau miau meow meow mao mao 🐱",
   "permissions": [
     "activeTab",
-    "storage",
-    "http://localhost:3000/"
+    "storage"
   ],
   "background" : {
     "service_worker":"assets/background.js"

@@ -43,8 +43,8 @@ function Popup() {
           left: rect.right + window.scrollX,
         });
         
-        chrome.storage.local.get("miauPrompt", async (data)=> {
-          const def = await getDefinition(selectedWord, sentence, data.miauPrompt);
+        chrome.storage.local.get("popupPrompt", async (data)=> {
+          const def = await getDefinition(selectedWord, sentence, data.popupPrompt);
           setDefinition(def);
         });
 
@@ -229,10 +229,10 @@ function Popup() {
   }  
   const handleAdd = async () => {
     try {
-      chrome.storage.local.get(["miauDeckInput", "miauAnkiInput"], async (data)=> {
+      chrome.storage.local.get(["deckInput", "ankiPrompt"], async (data)=> {
         // retrieve local variables
-        const struct = data.miauAnkiInput;
-        const deckName = data.miauDeckInput;
+        const struct = data.ankiPrompt;
+        const deckName = data.deckInput;
         const audioFilename = `${selectedText}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")
         console.log(audioFilename)
         // Get anki card's back

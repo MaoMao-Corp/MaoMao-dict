@@ -6,19 +6,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const saveButton = document.getElementById("savePrompt");
   
     // Cargar el prompt guardado
-    chrome.storage.local.get("miauPrompt", (data) => {
-      if (data.miauPrompt) {
-        promptInput.value = data.miauPrompt;
+    chrome.storage.local.get("popupPrompt", (data) => {
+      if (data.popupPrompt) {
+        promptInput.value = data.popupPrompt;
       }
     });
-    chrome.storage.local.get("miauAnkiInput", (data) => {
-      if (data.miauAnkiInput) {
-        ankiInput.value = data.miauAnkiInput;
+    chrome.storage.local.get("ankiPrompt", (data) => {
+      if (data.ankiPrompt) {
+        ankiInput.value = data.ankiPrompt;
       }
     });
-    chrome.storage.local.get("miauDeckInput", (data) => {
-      if (data.miauDeckInput) {
-        deckInput.value = data.miauDeckInput;
+    chrome.storage.local.get("deckInput", (data) => {
+      if (data.deckInput) {
+        deckInput.value = data.deckInput;
       }
     });
     
@@ -28,10 +28,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const newPrompt = promptInput.value;
       const newAnkiInput = ankiInput.value;
       const newDeckInput = deckInput.value;
-      chrome.storage.local.set({ miauPrompt: newPrompt });
-      chrome.storage.local.set({ miauAnkiInput: newAnkiInput });
-      chrome.storage.local.set({ miauDeckInput: newDeckInput });
-      alert("Prompt guardado!")
+      chrome.storage.local.set({ popupPrompt: newPrompt });
+      chrome.storage.local.set({ ankiPrompt: newAnkiInput });
+      chrome.storage.local.set({ deckInput: newDeckInput });
+      alert("Prompt saved!")
     });
   });
   
