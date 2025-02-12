@@ -4,7 +4,7 @@
 guardar words/phrases dependiendo de el boton
 markdown toggle
 
-no añadir palabras conocidas
 
 # pro
 permitir non-basic mazos
+guardar en anki/ guardar en local

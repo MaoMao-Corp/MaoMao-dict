@@ -30,13 +30,20 @@ function Popup() {
 
       if (selectedWord && !selectedWord.includes(" ")) {
         const range = selection.getRangeAt(0);
-        const fullText = range.commonAncestorContainer.textContent;
-        const sentence = extractSentence(fullText, range.startOffset);
+        const commonAncestor = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+        ? range.commonAncestorContainer.parentElement
+        : range.commonAncestorContainer;
+  
+        const fullText = commonAncestor.textContent;
+    
+        const globalOffset = getGlobalOffset(commonAncestor, range.startContainer, range.startOffset);
+    
+        const sentence = extractSentence(fullText, globalOffset);
+        console.log(sentence);
 
         setSelectedText(selectedWord);
         setContextSentence(sentence);
         setIsVisible(true);
-
         const rect = range.getBoundingClientRect();
         setPosition({
           top: rect.top + window.scrollY,
@@ -44,8 +51,16 @@ function Popup() {
         });
         
         chrome.storage.local.get("popupPrompt", async (data)=> {
-          const def = await getDefinition(selectedWord, sentence, data.popupPrompt, true); // md (make it an option)
+          const completion = await getCompletion(selectedWord, sentence, data.popupPrompt, true); // md (make it an option)
+          
+          const lang = await completion.l
+          const code = await completion.c
+          const def = await completion.d
+
+          setCodeLang(code)
           setDefinition(def);
+          doIknowThisWord(lang,selectedWord)
+          
         });
 
       } else {
@@ -66,10 +81,49 @@ function Popup() {
     return () => document.removeEventListener("mouseup", handleSelection);
   }, []);
 
+  const doIknowThisWord = (lang, word) => {
+    chrome.storage.local.get("knownWords", (data) => {
+      if (data.knownWords==undefined || data.knownWords[lang]==undefined) return
+      setKnownWord(data.knownWords[lang].includes(word))
+    })
+  }
+
+  const getGlobalOffset = (root, node, localOffset) => {
+    let offset = 0;
+
+    /**
+     * Función recursiva que recorre los nodos en preorden.
+     * Cuando encuentra el nodo objetivo, suma el offset local y termina.
+     */
+    const traverse = (current) => {
+      if (current === node) {
+        offset += localOffset;
+        return true; // Se encontró el nodo
+      }
+
+      // Si es un nodo de texto, sumamos su longitud.
+      if (current.nodeType === Node.TEXT_NODE) {
+        offset += current.textContent.length;
+      }
+
+      // Recorremos los nodos hijos.
+      for (let i = 0; i < current.childNodes.length; i++) {
+        const child = current.childNodes[i];
+        if (traverse(child)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    traverse(root);
+    return offset;
+  };
+
   const extractSentence = (text, offset) => {
     let start = offset;
     let end = offset;
-  
+    
     while (start > 0 && !/[.!?]/.test(text[start - 1]) && text[start - 1] !== '\n') {
       start--;
     }
@@ -80,8 +134,9 @@ function Popup() {
   };
 
   // /define/ endpoint related
-  const fetchCompletion = async (word, sentence, structure, md) =>
+  const getCompletion = async (word, sentence, structure, md) =>
   {
+    console.log("pre fetch")
     const response = await fetch("https://miau-miau-dict-backend.onrender.com/define/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -89,19 +144,8 @@ function Popup() {
     });
     const result = await response.json()
     const completion = await result[0]
-    setCodeLang(completion.c)
-    return completion.d
+    return completion
   }
-  const getDefinition = async (word, sentence, structure, md) => {
-    try {
-      const def = await fetchCompletion(word, sentence, structure, md)
-      return def
-    } 
-    catch (error) {
-      return "Error al obtener la definición.";
-    }
-  };
-
 
   // /tts/ endpoint related 
   const fetchAudio = async (text, code) => {
@@ -235,8 +279,8 @@ function Popup() {
     }
   }
 
-
   const play_audio = (audio64) => {
+
     const binaryData = atob(audio64); // Decodificar base64 a binario
         const arrayBuffer = new Uint8Array(binaryData.length);
         for (let i = 0; i < binaryData.length; i++) {
@@ -264,14 +308,18 @@ function Popup() {
     try {
       chrome.storage.local.get(["deckInput","ankiFrontPrompt", "ankiBackPrompt"], async (data)=> {
         // retrieve local variables
-        const deckName = data.deckInput.replace("$SOUND","").replace("$SENTENCE", contextSentence).replace("$WORD", selectedText);
+        
         const FrontStruct = data.ankiFrontPrompt
         const backStruct = data.ankiBackPrompt;
 
-        const audioFilename = `${selectedText}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")
         // Get anki card's back
-        const back = await fetchCompletion(selectedText, contextSentence, backStruct, false) //no markdown (make it an option)
+        const completion = await getCompletion(selectedText, contextSentence, backStruct, false) //no markdown (make it an option)
+        
+        const back = await completion.d
+        const deckName = data.deckInput.replace("$SOUND","").replace("$SENTENCE", contextSentence).replace("$WORD", selectedText) || completion.l;
 
+
+        const audioFilename = `${selectedText}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")
         // si no se ha generado el audio, se genera ahora,
         if (!audio) {
           audioFile = await getAudio(selectedText, codeLang)
@@ -290,7 +338,20 @@ function Popup() {
         const fieldNames = await getFieldNames()
         noteID = await addNote(deckName, audioFilename, selectedText, contextSentence, FrontStruct, back, fieldNames)
         if (!noteID) setAddError(true)
-        else setKnownWord(true)
+        else {
+          
+          chrome.storage.local.get("knownWords", (data)=>{
+            const currentKnownWords = data.knownWords || {}
+            const lang = completion.l
+            if (!currentKnownWords[lang]) currentKnownWords[lang] = [];
+            
+            currentKnownWords[lang].push(selectedText)
+            // Guardamos nuevamente el objeto actualizado en el almacenamiento
+            console.log(currentKnownWords)
+            chrome.storage.local.set({ knownWords: currentKnownWords });
+          })
+          setKnownWord(true)
+        }
     })} 
     // catch error
     catch (error) {
@@ -325,19 +386,21 @@ function Popup() {
         alt="add button"
         className="add-img"
         onClick={()=>handleAdd(selectedText, contextSentence, audio)}></img> }
-        {(knownWord && !addError) &&  <svg
-        className="tick-img"
-        width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M5 12L10 17L20 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>}
-        {
-          addError && <svg
+
+          {(knownWord && !addError) &&  <svg
+          className="tick-img"
+          width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 12L10 17L20 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>}
+        
+          {addError && <svg
           className="error-img"
           width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
           <line x1="10" y1="10" x2="90" y2="90" stroke="white" stroke-width="20" stroke-linecap="round"/>
           <line x1="90" y1="10" x2="10" y2="90" stroke="white" stroke-width="20" stroke-linecap="round"/>
-        </svg>
-        }
+          </svg>
+          }
+
       </div>
       <p className="sentence" style={{ fontStyle: "italic", color: "#888" }}>
         {contextSentence}

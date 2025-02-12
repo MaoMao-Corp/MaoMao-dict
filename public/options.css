@@ -55,4 +55,43 @@ body {
   button:hover {
     background-color: #3700b3;
   }
-  
+
+  input[type="radio"] {
+    appearance: none; /* Oculta la apariencia predeterminada */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 16px;
+    height: 16px;
+    position: relative;
+    cursor: pointer;
+}
+
+input[type="radio"]:checked::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+
+/* Contenedor de botones de idiomas */
+#languagesContainer {
+  display: flex;
+  flex-wrap: wrap; /* Permite que se ubiquen en varias líneas */
+  gap: 8px;        /* Espacio entre botones */
+}
+
+/* Estilo para los botones de idiomas */
+.language-button {
+  flex: 0 0 120px; /* Ancho fijo de 120px. Puedes ajustar este valor según necesites */
+  text-align: center;
+  padding: 8px 12px;
+  background-color: #414141;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
