@@ -24,9 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   // Cargar el diccionario de palabras conocidas
-  chrome.storage.local.get("knownWords", (data) => {
-    if (data.knownWords && Object.keys(data.knownWords).length > 0) {
-      const idiomas = Object.keys(data.knownWords);
+  chrome.storage.local.get("wordsNsentences", (data) => {
+    if (data.wordsNsentences && Object.keys(data.wordsNsentences).length > 0) {
+      const idiomas = Object.keys(data.wordsNsentences);
       idiomas.forEach((idioma, index) => {
         // Crear un botón para cada idioma
         const languageButton = document.createElement("button");
@@ -38,12 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Seleccionar el primer idioma por defecto
         if (index === 0) {
-          displayKnownWords(idioma, data.knownWords[idioma]);
+          displayKnownWords(idioma, Object.keys(data.wordsNsentences[idioma]));
         }
 
         // Evento para mostrar palabras del idioma seleccionado
         languageButton.addEventListener("click", () => {
-          displayKnownWords(idioma, data.knownWords[idioma]);
+          displayKnownWords(idioma, Object.keys(data.wordsNsentences[idioma]));
         });
 
         languagesContainer.appendChild(languageButton);

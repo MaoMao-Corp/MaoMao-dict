@@ -1,92 +1,127 @@
 .popup-header
 {
-    display: flex;
+    display: flex !important;
 }
 
 .word{
-    font-size: 20px;
-    margin-bottom: 0;
-    margin-top: 0;
-    color: white;
+    font-size: 20px !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    color: white !important;
+    font-weight: bold !important;
+    border-bottom: 1px solid var(--border-color-base, #a2a9b1) !important;
 }
 .word::first-letter
 {
-    text-transform: capitalize;
+    text-transform: capitalize !important;
 }
 
+.img-derecha {
+    margin-right: 0px;
+    margin-left: auto !important;
+    display: flex;
+    gap: 5px;
+    
+}
 .audio-img
 {
-    height: 20px;
-    width: auto;
-    margin-left: 10px;  
-    margin-top: 5px;
-    cursor: pointer;
+    height: 20px !important;
+    width: auto !important;
+    cursor: pointer !important;
 }
 
 .add-img
 {
-    height: 15px;
-    width: auto;
-    margin-right: 0px;
-    margin-left: auto;
-    cursor: pointer;
+    height: 15px !important;
+    width: auto !important;
+    cursor: pointer !important;
+}
+
+.hat-img
+{
+    height: 23px !important;
+    width: auto !important;
 }
 
 .tick-img
 {
-    height: 20px;
-    width: auto;
-    margin-right: 0px;
-    margin-left: auto;
+    height: 20px !important;
+    width: auto !important;
 }
 
 .error-img
 {
-    height: 15px;
-    width: auto;
-    margin-right: 0px;
-    margin-left: auto;
+    height: 15px !important;
+    width: auto !important;
 }
 
 .sentence
 {
-    margin-top: 0;
+    margin-top: 0 !important;
 }
 
 .definition
 {
-    color: white;
+    color: white !important;
+}
+
+.example-hitbox{
+    width: full !important;
+    color: white !important;
+    font-size: 14px !important;
+    background-color: #212121 !important;
+    font-weight: bold !important;
+    border-top: 1px solid var(--border-color-base, #a2a9b1) !important;
+}
+
+.examples-list { 
+    list-style: disc !important;
+    list-style-position: inside !important;
+}
+
+.example-hitbox:hover
+{
+    background-color: #313131 !important;
+    cursor: pointer !important;
+}
+
+.example { 
+    width: full !important;
+    color: white !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+
 }
 
 .popup-bubble {
-  position: absolute;
-  background-color: #212121;
-  border: 3px solid #313131;
-  border-radius: 21px 21px 21px 0px;
-  box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
-  z-index: 1000;
-  font-size: 12px;
-  max-width: 300px;
-  max-height: 140px;
-  overflow-y: auto;
-  padding-right: 15px;
-  padding: 10px;
+  position: absolute !important;
+  background-color: #212121 !important;
+  border: 3px solid #313131 !important;
+  border-radius: 21px 21px 21px 0px !important;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.2) !important;
+  z-index: 1000 !important;
+  font-size: 12px !important;
+  max-width: 300px !important;
+  max-height: 140px !important;
+  overflow-y: auto !important;
+  padding-right: 15px !important;
+  padding: 10px !important;
 }
 
 
 .popup-bubble::-webkit-scrollbar {
-    width: 5px; 
+    width: 5px !important; 
 }
   
 .popup-bubble::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0); 
-    width: 10px;
+    background: rgba(0,0,0,0) !important; 
+    width: 10px !important;
 }
   
 .popup-bubble::-webkit-scrollbar-thumb {
-    background-color: #2d2d2d; /* Color semitransparente para la thumb */
-    border-radius: 10px;
+    background-color: #2d2d2d !important; /* Color semitransparente para la thumb */
+    border-radius: 10px !important;
 
-    background-clip:content-box;
+    background-clip:content-box !important;
   }
   
