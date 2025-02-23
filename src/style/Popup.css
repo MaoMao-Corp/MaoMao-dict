@@ -55,11 +55,22 @@
     width: auto !important;
 }
 
+.sentence-block{
+    display: flex;
+    gap: 5px;
+
+}
 .sentence
 {
     margin-top: 0 !important;
 }
-
+.audio-sentence
+{
+    height: 20px !important;
+    width: auto !important;
+    cursor: pointer !important;
+}
+        
 .definition
 {
     color: white !important;

@@ -4,6 +4,7 @@ import '../style/Popup.css';
 import speaker from "../media/speaker.png"
 import add from "../media/add.png"
 import hat from "../media/hat.png"
+import speakerGray from "../media/speaker_gray.png"
 
 function Popup() {
   const [selectedText, setSelectedText] = useState("");
@@ -12,7 +13,8 @@ function Popup() {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [definition, setDefinition] = useState("Thinking...");
   const [knownWord, setKnownWord] = useState(false)
-  const [audio, setAudio] = useState(null)
+  const [audioWord, setAudioWord] = useState(null)
+  const [audioSentence, setAudioSentence] = useState(null)
   const [codeLang, setCodeLang] = useState("")
   const [addError, setAddError] = useState(false)
   const [examples, setExamples] = useState([])
@@ -75,7 +77,8 @@ function Popup() {
         setContextSentence("");
         setCodeLang("")
         setKnownWord(false)
-        setAudio(null)
+        setAudioWord(null)
+        setAudioSentence(null)
         setCodeLang("")
         setAddError(false)
         setExamples([])
@@ -314,13 +317,21 @@ function Popup() {
   }
 
   // handle buttons
-  const handleSound = async () => {
-    if (audio) play_audio(audio);
+  const handleSoundWord = async () => {
+    if (audioWord) play_audio(audioWord);
     else {
       const newAudio = await getAudio(selectedText, codeLang)
-      setAudio(newAudio)
+      setAudioWord(newAudio)
       play_audio(newAudio)
     }
+  }
+  const handleSoundSentence = async () => {
+      if (audioSentence) play_audio(audioSentence);
+      else {
+        const newAudio = await getAudio(contextSentence, codeLang)
+        setAudioSentence(newAudio)
+        play_audio(newAudio)
+      }
   }  
   const handleAdd = async () => {
     try {
@@ -329,21 +340,20 @@ function Popup() {
         
         const FrontStruct = data.ankiFrontPrompt
         const backStruct = data.ankiBackPrompt;
-
-        // Get anki card's back
-        const completion = await getCompletion(selectedText, contextSentence, backStruct, false)
         
-        const back = await completion.d
-        const deckName = (data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", contextSentence).replace("$WORD", selectedText) : completion.l)
+        // Get anki card's back
+        
+        const back = data.ankiBackPrompt ? await (await getCompletion(selectedText, contextSentence, backStruct, false)).d : definition;
+        const deckName = data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", contextSentence).replace("$WORD", selectedText) : lang
 
 
-        const audioFilename = `${selectedText}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")
+        const audioFilename = `${contextSentence}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")
         // si no se ha generado el audio, se genera ahora,
-        if (!audio) {
+        if (!audioSentence) {
           audioFile = await getAudio(selectedText, codeLang)
-          setAudio(audioFile)
+          setAudioSentence(audioFile)
         }  else { // si ya hay audio, solo refedinir
-          var audioFile = audio
+          var audioFile = audioSentence
         }
         storeMediaFiles(audioFilename, audioFile) // self-explanatory
 
@@ -361,7 +371,7 @@ function Popup() {
           chrome.storage.local.get(["wordsNsentences"], (data)=>{
             const prevWordsAndSentences = data.wordsNsentences
             const currentWordsNsentences = prevWordsAndSentences ?? {}
-            const lang = completion.l.toLowerCase()
+            const lang = lang.toLowerCase()
             const word = selectedText.toLowerCase()
             const phrase = contextSentence.toLowerCase()
             if (!currentWordsNsentences[lang]) currentWordsNsentences[lang] = {};
@@ -422,7 +432,7 @@ function Popup() {
           src={speaker}
           alt="sound button"
           className="audio-img"
-          onClick={handleSound}
+          onClick={handleSoundWord}
         />}
         <div className="img-derecha">
           {knownWord && <img src={hat} className="hat-img"></img>}
@@ -430,7 +440,7 @@ function Popup() {
           src={add}
           alt="add button"
           className="add-img"
-          onClick={()=>handleAdd(selectedText, contextSentence, audio)}></img> }
+          onClick={()=>handleAdd(selectedText, contextSentence, audioSentence)}></img> }
 
           {(!newPhrase && !addError) &&  <svg
             className="tick-img"
@@ -448,9 +458,17 @@ function Popup() {
 
         </div>
         </div>
-      <p className="sentence" style={{ fontStyle: "italic", color: "#888" }}>
-        {contextSentence}
-      </p>
+      <div className="sentence-block">
+        <p className="sentence" style={{ fontStyle: "italic", color: "#888" }}>
+          {contextSentence}
+        </p>
+        {codeLang && <img
+          src={speakerGray}
+          alt="sound button"
+          className="audio-sentence audio-img"
+          onClick={handleSoundSentence}
+        />}
+      </div>
       <ReactMarkdown className="definition">{definition}</ReactMarkdown>
       <div>
         <p className="example-hitbox" onClick={()=>handleExamples(selectedText, codeLang)}>Examples</p>

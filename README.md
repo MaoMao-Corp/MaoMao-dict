@@ -1,9 +1,8 @@
 # Miau Miau dict
 
 ## TODO
-guardar words/phrases dependiendo de el boton
-markdown toggle
-
+eliminar palabras
+config page no se guarda
 
 # pro
 permitir non-basic mazos

@@ -16,10 +16,11 @@ document.addEventListener("DOMContentLoaded", () => {
   chrome.storage.local.get(
     ["popupPrompt", "deckInput", "ankiFrontPrompt", "ankiBackPrompt"],
     (data) => {
-      if (data.popupPrompt) promptInput.value = data.popupPrompt;
-      if (data.deckInput) deckInput.value = data.deckInput;
-      if (data.ankiFrontPrompt) ankiFrontInput.value = data.ankiFrontPrompt;
-      if (data.ankiBackPrompt) ankiBackInput.value = data.ankiBackPrompt;
+      console.log(data)
+      if (data.popupPrompt || data.popupPrompt=="") promptInput.value = data.popupPrompt;
+      if (data.deckInput || data.popupPrompt=="") deckInput.value = data.deckInput;
+      if (data.ankiFrontPrompt || data.popupPrompt=="") ankiFrontInput.value = data.ankiFrontPrompt;
+      if (data.ankiBackPrompt || data.popupPrompt=="") ankiBackInput.value = data.ankiBackPrompt;
     }
   );
 
