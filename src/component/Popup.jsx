@@ -55,8 +55,8 @@ function Popup() {
           left: rect.right + window.scrollX,
         });
         
-        chrome.storage.local.get(["popupPrompt", "savedPhrases"], async (data)=> {
-          const completion = await getCompletion(selectedWord, sentence, data.popupPrompt, true); // md (make it an option)
+        chrome.storage.local.get(["popupPrompt", "savedPhrases", "pronuntiationInput"], async (data)=> {
+          const completion = await getCompletion(selectedWord, sentence, data.popupPrompt, data.pronuntiationInput, true); // md (make it an option)
           
           const lang = await completion.l
           const code = await completion.c
@@ -156,15 +156,17 @@ function Popup() {
   };
 
   // /define/ endpoint related
-  const getCompletion = async (word, sentence, structure, md) =>
+  const getCompletion = async (word, sentence, structure, pronMethod, md) =>
   {
     const response = await fetch("https://maomao-dict.onrender.com/define/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word, sentence, structure, md}),
+      body: JSON.stringify({ word, sentence, structure, pronMethod, md}),
     });
+    
     const result = await response.json()
     const completion = await result[0]
+    console.log(completion)
     return completion
   }
 
@@ -395,7 +397,6 @@ function Popup() {
   const handleExamples = async (word, lang) => {
     chrome.storage.local.get("popupPrompt", async (data)=>{
       const structure = data.popupPrompt
-      console.log(word, structure, lang)
       const examplesResponse = await fetch("https://maomao-dict.onrender.com/examples/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -403,7 +404,6 @@ function Popup() {
       });
       const examplesResult = await examplesResponse.json()
       const examples = await examplesResult[0]
-      console.log(examples)
       setExamples(examples)
     })
 

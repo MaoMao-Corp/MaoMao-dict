@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const deckInput = document.getElementById("deckInput");
   const ankiFrontInput = document.getElementById("ankiFrontInput");
   const ankiBackInput = document.getElementById("ankiBackInput");
+  const pronInput = document.getElementById("pronuntiationInput")
   const saveButton = document.getElementById("savePrompt");
 
   // Elementos para la visualización de las palabras conocidas por idioma
@@ -14,13 +15,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Cargar la configuración guardada
   chrome.storage.local.get(
-    ["popupPrompt", "deckInput", "ankiFrontPrompt", "ankiBackPrompt"],
+    ["popupPrompt", "deckInput", "ankiFrontPrompt", "ankiBackPrompt", "pronuntiationInput"],
     (data) => {
       console.log(data)
       if (data.popupPrompt || data.popupPrompt=="") promptInput.value = data.popupPrompt;
       if (data.deckInput || data.popupPrompt=="") deckInput.value = data.deckInput;
       if (data.ankiFrontPrompt || data.popupPrompt=="") ankiFrontInput.value = data.ankiFrontPrompt;
       if (data.ankiBackPrompt || data.popupPrompt=="") ankiBackInput.value = data.ankiBackPrompt;
+      if (data.pronuntiationInput) pronInput.value=data.pronuntiationInput
     }
   );
 
@@ -66,6 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
       deckInput: deckInput.value,
       ankiFrontPrompt: ankiFrontInput.value,
       ankiBackPrompt: ankiBackInput.value,
+      pronuntiationInput: pronInput.value
     });
     alert("Prompt saved!");
   });

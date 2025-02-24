@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Miau Miau dict",
+  "name": "MaoMao Dict",
   "version": "2.0",
   "description": "Miau miau meow meow mao mao 🐱",
   "permissions": [
@@ -28,6 +28,6 @@
     "128":"icons/icon.png"
   },
   "action": {
-    "default_title": "Miau Miau dict"
+    "default_title": "MaoMao Dict"
   }
 }
