@@ -20,6 +20,7 @@ function Popup() {
   const [examples, setExamples] = useState([])
   const [newPhrase, setNewPhrase] = useState(true)
   const [lang, setLang] = useState("")
+  const [phonetics, setPhonetics] = useState("")
   // Creamos un ref para el popup
   const popupRef = useRef(null);
 
@@ -55,16 +56,17 @@ function Popup() {
           left: rect.right + window.scrollX,
         });
         
-        chrome.storage.local.get(["popupPrompt", "savedPhrases", "pronuntiationInput"], async (data)=> {
-          const completion = await getCompletion(selectedWord, sentence, data.popupPrompt, data.pronuntiationInput, true); // md (make it an option)
+        chrome.storage.local.get(["popupPrompt", "savedPhrases", "pronunciationInput"], async (data)=> {
+          const completion = await getCompletion(selectedWord, sentence, data.popupPrompt, data.pronunciationInput, true); // md (make it an option)
           
           const lang = await completion.l
           const code = await completion.c
           const def = await completion.d
-
+          const pron =  await completion.p
           setCodeLang(code)
           setDefinition(def);
           setLang(lang.toLowerCase())
+          setPhonetics(pron)
           doIknowThisWord(lang.toLowerCase(), selectedWord.toLowerCase())
           checkIfPhraseSaved(lang.toLowerCase(), selectedWord.toLowerCase(), sentence.toLowerCase())
         });
@@ -84,6 +86,7 @@ function Popup() {
         setExamples([])
         setNewPhrase(true)
         setLang("")
+        setPhonetics("")
       }
     };
 
@@ -161,12 +164,11 @@ function Popup() {
     const response = await fetch("https://maomao-dict.onrender.com/define/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word, sentence, structure, pronMethod, md}),
+      body: JSON.stringify({ word: word, sentence: sentence, structure: structure, pronunciation: pronMethod, md}),
     });
     
     const result = await response.json()
     const completion = await result[0]
-    console.log(completion)
     return completion
   }
 
@@ -435,6 +437,7 @@ function Popup() {
     >
       <div className="popup-header">
         <h2 className="word">{selectedText}</h2>
+        <p className="phonetics">{phonetics}</p>
         {codeLang && <img
           src={speaker}
           alt="sound button"
