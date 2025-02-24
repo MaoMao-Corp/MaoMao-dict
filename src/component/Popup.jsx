@@ -158,7 +158,7 @@ function Popup() {
   // /define/ endpoint related
   const getCompletion = async (word, sentence, structure, md) =>
   {
-    const response = await fetch("https://miau-miau-dict-backend.onrender.com/define/", {
+    const response = await fetch("https://maomao-dict.onrender.com/define/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ word, sentence, structure, md}),
@@ -171,7 +171,7 @@ function Popup() {
   // /tts/ endpoint related 
   const fetchAudio = async (text, code) => {
     
-    const audioResponse = await fetch("https://miau-miau-dict-backend.onrender.com/tts/", {
+    const audioResponse = await fetch("https://maomao-dict.onrender.com/tts/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({text, code}),
@@ -393,14 +393,20 @@ function Popup() {
     }
   }
   const handleExamples = async (word, lang) => {
-    const examplesResponse = await fetch("https://miau-miau-dict-backend.onrender.com/examples/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({word ,lang}),
-    });
-    const examplesResult = await examplesResponse.json()
-    const examples = await examplesResult[0]
-    setExamples(examples)
+    chrome.storage.local.get("popupPrompt", async (data)=>{
+      const structure = data.popupPrompt
+      console.log(word, structure, lang)
+      const examplesResponse = await fetch("https://maomao-dict.onrender.com/examples/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({word, structure, lang}),
+      });
+      const examplesResult = await examplesResponse.json()
+      const examples = await examplesResult[0]
+      console.log(examples)
+      setExamples(examples)
+    })
+
   }
 
   const handleClickExample = (index) => {
@@ -409,6 +415,7 @@ function Popup() {
     checkIfPhraseSaved(lang, selectedText, Object.keys(currentExamples)[index])
     setContextSentence(Object.keys(currentExamples)[index])
     setDefinition(Object.values(currentExamples)[index])
+    setAudioSentence(null)
 
     delete currentExamples[Object.keys(currentExamples)[index]]
     currentExamples[contextSentence]= definition
