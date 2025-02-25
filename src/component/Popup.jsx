@@ -115,23 +115,23 @@ function Popup() {
 
   const getGlobalOffset = (root, node, localOffset) => {
     let offset = 0;
-
+  
     /**
-     * Función recursiva que recorre los nodos en preorden.
-     * Cuando encuentra el nodo objetivo, suma el offset local y termina.
+     * Recursive function that traverses nodes in preorder.
+     * When it finds the target node, it adds the local offset and ends.
      */
     const traverse = (current) => {
       if (current === node) {
         offset += localOffset;
-        return true; // Se encontró el nodo
+        return true; // Found the node
       }
-
-      // Si es un nodo de texto, sumamos su longitud.
+  
+      // If it's a text node, add its length.
       if (current.nodeType === Node.TEXT_NODE) {
         offset += current.textContent.length;
       }
-
-      // Recorremos los nodos hijos.
+  
+      // Traverse child nodes.
       for (let i = 0; i < current.childNodes.length; i++) {
         const child = current.childNodes[i];
         if (traverse(child)) {
@@ -140,23 +140,32 @@ function Popup() {
       }
       return false;
     };
-
+  
     traverse(root);
     return offset;
   };
-
+  
   const extractSentence = (text, offset) => {
     let start = offset;
     let end = offset;
-    
-    while (start > 0 && !/[.!?]/.test(text[start - 1]) && text[start - 1] !== '\n') {
+  
+    // Define sentence-ending punctuation for Korean, Chinese, and Japanese.
+    const sentenceEndPattern = /[。！？\n]/; // Use common punctuation
+  
+    // Move backward to find the start of the sentence.
+    while (start > 0 && !sentenceEndPattern.test(text[start - 1])) {
       start--;
     }
-    while (end < text.length && !/[.!?]/.test(text[end]) && text[end] !== '\n') {
+    
+    // Move forward to find the end of the sentence.
+    while (end < text.length && !sentenceEndPattern.test(text[end])) {
       end++;
     }
+  
+    // Return the sentence in the range.
     return text.slice(start, end).trim();
   };
+  
 
   // /define/ endpoint related
   const getCompletion = async (word, sentence, structure, pronMethod, md) =>
@@ -339,15 +348,15 @@ function Popup() {
   }  
   const handleAdd = async () => {
     try {
-      chrome.storage.local.get(["deckInput","ankiFrontPrompt", "ankiBackPrompt"], async (data)=> {
+      chrome.storage.local.get(["deckInput","ankiFrontPrompt", "ankiBackPrompt", "pronunciationInput"], async (data)=> {
         // retrieve local variables
         
         const FrontStruct = data.ankiFrontPrompt
         const backStruct = data.ankiBackPrompt;
-        
+        const pronunciation = data.pronunciationInput
         // Get anki card's back
         
-        const back = data.ankiBackPrompt ? await (await getCompletion(selectedText, contextSentence, backStruct, false)).d : definition;
+        const back = data.ankiBackPrompt ? await (await getCompletion(selectedText, contextSentence, backStruct, pronunciation, false)).d : definition;
         const deckName = data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", contextSentence).replace("$WORD", selectedText) : lang
 
 
@@ -399,10 +408,11 @@ function Popup() {
   const handleExamples = async (word, lang) => {
     chrome.storage.local.get("popupPrompt", async (data)=>{
       const structure = data.popupPrompt
+      console.log(word, structure, lang)
       const examplesResponse = await fetch("https://maomao-dict.onrender.com/examples/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({word, structure, lang}),
+        body: JSON.stringify({word:word, structure: structure, lang: lang}),
       });
       const examplesResult = await examplesResponse.json()
       const examples = await examplesResult[0]
