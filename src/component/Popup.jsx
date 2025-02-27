@@ -378,17 +378,18 @@ function Popup() {
         const FrontStruct = data.ankiFrontPrompt
         const backStruct = data.ankiBackPrompt;
         const pronunciation = data.pronunciationInput
-        
+        console.log(backStruct, backStruct==true, backStruct==false)
+        console.log(definition)
         // Get anki card's back
-        const back = pronunciation ? await getBack(selectedText, contextSentence, backStruct, pronunciation): definition;
-
+        const back = backStruct ? await getBack(selectedText, contextSentence, backStruct, pronunciation): definition;
+        console.log("this is the back:", back)
         const deckName = data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", contextSentence).replace("$WORD", selectedText) : lang
         
         // Get Audio
         const audioFilename = `${contextSentence}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")
         // si no se ha generado el audio, se genera ahora,
         if (!audioSentence) {
-          audioFile = await getAudio(selectedText, codeLang)
+          audioFile = await getAudio(contextSentence, codeLang)
           setAudioSentence(audioFile)
         }  else { // si ya hay audio, solo refedinir
           var audioFile = audioSentence
