@@ -57,7 +57,7 @@ function Popup() {
         });
         
         chrome.storage.local.get(["popupPrompt", "savedPhrases", "pronunciationInput"], async (data)=> {
-          const completion = await getCompletion(selectedWord, sentence, data.popupPrompt, data.pronunciationInput, true); // md (make it an option)
+          const completion = await getCompletion(selectedWord, sentence, data.popupPrompt, data.pronunciationInput); // md (make it an option)
           
           const lang = await completion.l
           const code = await completion.c
@@ -168,12 +168,12 @@ function Popup() {
   
 
   // /define/ endpoint related
-  const getCompletion = async (word, sentence, structure, pronMethod, md) =>
+  const getCompletion = async (word, sentence, structure, pronMethod) =>
   {
     const response = await fetch("https://maomao-dict.onrender.com/define/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: word, sentence: sentence, structure: structure, pronunciation: pronMethod, md}),
+      body: JSON.stringify({ word: word, sentence: sentence, structure: structure, pronunciation: pronMethod}),
     });
     
     const result = await response.json()
@@ -198,6 +198,37 @@ function Popup() {
       return audio
     }    catch (error)
     {console.error("Error while getting audio:", error)}
+  }
+  
+  // /anki/ endpoint related
+  const getBack = async (word, sentence, structure, pronMethod) =>
+  {
+    const ankiResponse = await fetch("https://maomao-dict.onrender.com/anki/", {
+      method: "POST",
+      mode: "cors",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({word: word, sentence: sentence, structure: structure, pronunciation: pronMethod})
+    })
+    const ankiResult = await ankiResponse.json()
+    return await ankiResult.back
+
+  }
+
+
+
+  // localhost:8765 (anki) related
+  const storeMediaFiles = async (filename, file) => {
+    const storeMediaResponse = await fetch("http://localhost:8765", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "storeMediaFile",
+        version: 6,
+        params: { filename: filename, data: file },
+      }),
+    });
+    const storeMediaResult = await storeMediaResponse.json();
+    if (!storeMediaResult.result) console.error("Error while storing media files")
   }
   
   const getDecks = async () => {
@@ -261,20 +292,7 @@ function Popup() {
     const modelField = await modelFieldResult.result
     return [...modelField, basic ]
   }
-  // localhost:8765 (anki) related
-  const storeMediaFiles = async (filename, file) => {
-    const storeMediaResponse = await fetch("http://localhost:8765", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "storeMediaFile",
-        version: 6,
-        params: { filename: filename, data: file },
-      }),
-    });
-    const storeMediaResult = await storeMediaResponse.json();
-    if (!storeMediaResult.result) console.error("Error while storing media files")
-  }
+
   const addNote = async (deckName, audioFilename, word, sentence, frontStruct, back, fields) => {
     try{
       const frontKey = fields[0]
@@ -309,9 +327,12 @@ function Popup() {
       const addNoteResult = await addNoteResponse.json();
       return await addNoteResult.result
     } catch(error) {
+      setAddError(true)
       console.error("Error while fetching localhost:8765 (anki connect api), MAKE SURE TO HAVE ANKI OPENED ;)", error)
     }
   }
+
+
 
   const play_audio = (audio64) => {
 
@@ -346,6 +367,9 @@ function Popup() {
         play_audio(newAudio)
       }
   }  
+
+
+
   const handleAdd = async () => {
     try {
       chrome.storage.local.get(["deckInput","ankiFrontPrompt", "ankiBackPrompt", "pronunciationInput"], async (data)=> {
@@ -354,12 +378,13 @@ function Popup() {
         const FrontStruct = data.ankiFrontPrompt
         const backStruct = data.ankiBackPrompt;
         const pronunciation = data.pronunciationInput
-        // Get anki card's back
         
-        const back = data.ankiBackPrompt ? await (await getCompletion(selectedText, contextSentence, backStruct, pronunciation, false)).d : definition;
+        // Get anki card's back
+        const back = pronunciation ? await getBack(selectedText, contextSentence, backStruct, pronunciation): definition;
+
         const deckName = data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", contextSentence).replace("$WORD", selectedText) : lang
-
-
+        
+        // Get Audio
         const audioFilename = `${contextSentence}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")
         // si no se ha generado el audio, se genera ahora,
         if (!audioSentence) {
@@ -380,7 +405,7 @@ function Popup() {
         noteID = await addNote(deckName, audioFilename, selectedText, contextSentence, FrontStruct, back, fieldNames)
         if (!noteID) setAddError(true)
         else {
-          
+
           chrome.storage.local.get(["wordsNsentences"], (data)=>{
             const prevWordsAndSentences = data.wordsNsentences
             const currentWordsNsentences = prevWordsAndSentences ?? {}
