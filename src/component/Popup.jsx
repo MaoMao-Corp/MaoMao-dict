@@ -183,7 +183,7 @@ function Popup() {
 
   // /tts/ endpoint related 
   const fetchAudio = async (text, code) => {
-    
+    console.log(text, code)
     const audioResponse = await fetch("https://maomao-dict.onrender.com/tts/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -194,24 +194,26 @@ function Popup() {
   }
   const getAudio = async (text, code) => {
     try {
+
       const audio = await fetchAudio(text, code)
+      console.log("audio done")
       return audio
     }    catch (error)
     {console.error("Error while getting audio:", error)}
   }
   
   // /anki/ endpoint related
-  const getBack = async (word, sentence, structure, pronMethod) =>
+  const getCards = async (word, structure, pronMethod) =>
   {
-    const ankiResponse = await fetch("https://maomao-dict.onrender.com/anki/", {
+    const ankiResponse = await fetch("https://maomao-dict.onrender.com/ankimulti/", {
       method: "POST",
-      mode: "cors",
       headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({word: word, sentence: sentence, structure: structure, pronunciation: pronMethod})
+      body: JSON.stringify({word: word, structure: structure, pronunciation: pronMethod})
     })
     const ankiResult = await ankiResponse.json()
-    return await ankiResult.back
+    const ankiMulti = await ankiResult[0]
 
+    return [Object.keys(ankiMulti), Object.values(ankiMulti)]
   }
 
 
@@ -293,39 +295,44 @@ function Popup() {
     return [...modelField, basic ]
   }
 
-  const addNote = async (deckName, audioFilename, word, sentence, frontStruct, back, fields) => {
+  const addNotes = async (deckName, audioFilenames, word, sentences, frontStruct, explanations, fields) => {
     try{
       const frontKey = fields[0]
       const backKey = fields[1]
       const modelName = fields[2]
-      const _____ = (frontStruct? frontStruct: "$SOUND $SENTENCE ($WORD)")
-      const front = _____.replace("$SOUND", `[sound:${audioFilename}]`).replace("$WORD", `${word}`).replace("$SENTENCE", `${sentence}`)
+      const _ = frontStruct? frontStruct: "$SOUND $SENTENCE ($WORD)"
 
-      const addNoteResponse = await fetch("http://localhost:8765", { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({
-          "action": "addNote",
-          "version": 6,
-          "params": {
-            "note": {
-              "deckName": deckName,
-              "modelName": modelName,
-              "fields": {
-                [frontKey]: front,
-                [backKey]: back
-              },
-              "tags": ["miaumiau"],
-              "options": {
-                "allowDuplicate": false
+      const notePromises = sentences.map(async (sentence, index) =>{
+        const explanation = explanations[index]
+        const audioFilename = audioFilenames[index]
+        const front = _.replace("$SOUND", `[sound:${audioFilename}]`).replace("$WORD", `${word}`).replace("$SENTENCE", `${sentence}`)
+
+        return fetch("http://localhost:8765", { 
+          method: "POST", 
+          headers: { "Content-Type": "application/json" }, 
+          body: JSON.stringify({
+            "action": "addNote",
+            "version": 6,
+            "params": {
+              "note": {
+                "deckName": deckName,
+                "modelName": modelName,
+                "fields": {
+                  [frontKey]: front,
+                  [backKey]: explanation
+                },
+                "tags": ["miaumiau"],
+                "options": {
+                  "allowDuplicate": false
+                }
               }
             }
           }
-        }
-        )
-      });
-      const addNoteResult = await addNoteResponse.json();
-      return await addNoteResult.result
+          )
+        }).then(response=>response.json());
+      })
+      
+      const result = await Promise.all(notePromises);
     } catch(error) {
       setAddError(true)
       console.error("Error while fetching localhost:8765 (anki connect api), MAKE SURE TO HAVE ANKI OPENED ;)", error)
@@ -378,23 +385,24 @@ function Popup() {
         const FrontStruct = data.ankiFrontPrompt
         const backStruct = data.ankiBackPrompt;
         const pronunciation = data.pronunciationInput
-        console.log(backStruct, backStruct==true, backStruct==false)
-        console.log(definition)
+
         // Get anki card's back
-        const back = backStruct ? await getBack(selectedText, contextSentence, backStruct, pronunciation): definition;
-        console.log("this is the back:", back)
-        const deckName = data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", contextSentence).replace("$WORD", selectedText) : lang
+        const [phrases, explanations] = await getCards(selectedText, backStruct, pronunciation);
+
+        const deckName = data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", "").replace("$WORD", "") : lang
         
         // Get Audio
-        const audioFilename = `${contextSentence}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")
+        const audioFilenames = phrases.map(sentence=>{return `${sentence}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")})
         // si no se ha generado el audio, se genera ahora,
-        if (!audioSentence) {
-          audioFile = await getAudio(contextSentence, codeLang)
-          setAudioSentence(audioFile)
-        }  else { // si ya hay audio, solo refedinir
-          var audioFile = audioSentence
-        }
-        storeMediaFiles(audioFilename, audioFile) // self-explanatory
+        
+        const audioList = await Promise.all(
+          phrases.map(async (sentence) => getAudio(sentence, codeLang))
+        )       
+        
+        audioFilenames.forEach(async (filename, index)=>{
+          const audio = audioList[index]
+          await storeMediaFiles(filename, audio) // self-explanatory
+        })
 
         const deckNames = await getDecks()
         if (!deckNames.includes(deckName)) {
@@ -403,7 +411,7 @@ function Popup() {
 
         // generar new note
         const fieldNames = await getFieldNames()
-        noteID = await addNote(deckName, audioFilename, selectedText, contextSentence, FrontStruct, back, fieldNames)
+        noteID = await addNotes(deckName, audioFilenames, selectedText, phrases, FrontStruct, explanations, fieldNames)
         if (!noteID) setAddError(true)
         else {
 
