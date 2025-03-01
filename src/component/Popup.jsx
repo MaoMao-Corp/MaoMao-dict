@@ -27,13 +27,11 @@ function Popup() {
   useEffect(() => {
     const handleSelection = async (event) => {
       // Si el clic se hizo dentro del popup, no hacemos nada.
-      if (popupRef.current && popupRef.current.contains(event.target)) {
-        return;
-      }
-
+      if (popupRef.current && popupRef.current.contains(event.target))  return;
 
       const selection = window.getSelection();
       const selectedWord = selection.toString().trim();
+      
       
       if (selectedWord && !selectedWord.includes(" ")) {
         const range = selection.getRangeAt(0);
@@ -332,14 +330,15 @@ function Popup() {
         }).then(response=>response.json());
       })
       
-      const result = await Promise.all(notePromises);
+      const results = await Promise.all(notePromises);
+      console.log("rererere",results.map(result=>result.result))
+      return results.map(result=> result.result)
     } catch(error) {
       setAddError(true)
       console.error("Error while fetching localhost:8765 (anki connect api), MAKE SURE TO HAVE ANKI OPENED ;)", error)
+      return []
     }
   }
-
-
 
   const play_audio = (audio64) => {
 
@@ -411,20 +410,21 @@ function Popup() {
 
         // generar new note
         const fieldNames = await getFieldNames()
-        noteID = await addNotes(deckName, audioFilenames, selectedText, phrases, FrontStruct, explanations, fieldNames)
-        if (!noteID) setAddError(true)
+        notesID = await addNotes(deckName, audioFilenames, selectedText, phrases, FrontStruct, explanations, fieldNames)
+        if (notesID.length==0) setAddError(true)
         else {
-
+          console.log("no errors in note addition")
           chrome.storage.local.get(["wordsNsentences"], (data)=>{
+            console.log("inside storage.local")
             const prevWordsAndSentences = data.wordsNsentences
             const currentWordsNsentences = prevWordsAndSentences ?? {}
-            const lang = lang.toLowerCase()
+            const language = lang.toLowerCase()
             const word = selectedText.toLowerCase()
             const phrase = contextSentence.toLowerCase()
-            if (!currentWordsNsentences[lang]) currentWordsNsentences[lang] = {};
+            if (!currentWordsNsentences[language]) currentWordsNsentences[language] = {};
             
-            if (!currentWordsNsentences[lang][word]) currentWordsNsentences[lang][word] = []
-            currentWordsNsentences[lang][word].push(phrase)
+            if (!currentWordsNsentences[language][word]) currentWordsNsentences[language][word] = []
+            currentWordsNsentences[language][word].push(phrase)
             // Guardamos nuevamente el objeto actualizado en el almacenamiento
 
             chrome.storage.local.set({ wordsNsentences: currentWordsNsentences})
@@ -435,6 +435,7 @@ function Popup() {
     })} 
     // catch error
     catch (error) {
+      console.log(error)
       setAddError(true)
       console.error("Error while adding card to anki: ", error);
     }
