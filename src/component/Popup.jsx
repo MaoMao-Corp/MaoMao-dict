@@ -93,21 +93,21 @@ function Popup() {
   }, []);
 
   const doIknowThisWord = (lang, word) => {
-    chrome.storage.local.get("wordsNsentences", (data) => {
+    chrome.storage.local.get("wordsSaved", (data) => {
 
-      if (!data.wordsNsentences || !data.wordsNsentences[lang]) return
-      setKnownWord(Object.keys(data.wordsNsentences[lang]).includes(word.toLowerCase()))
+      if (!data.wordsSaved || !data.wordsSaved[lang]) return
+      setKnownWord(Object.keys(data.wordsSaved[lang]).includes(word.toLowerCase()))
     })
   }
 
   const checkIfPhraseSaved = (lang, word, phrase) =>
   {
-    chrome.storage.local.get("wordsNsentences", (data)=>{
-      if (!data.wordsNsentences || !data.wordsNsentences[lang] || !data.wordsNsentences[lang][word]) {
+    chrome.storage.local.get("wordsSaved", (data)=>{
+      if (!data.wordsSaved || !data.wordsSaved[lang] || !data.wordsSaved[lang][word] || !data.wordsSaved[lang][word]["sentences"]) {
         setNewPhrase(true)
         return;
       }
-      setNewPhrase(!data.wordsNsentences[lang][word].includes(phrase))
+      setNewPhrase(!data.wordsSaved[lang][word]["sentences"].includes(phrase))
     })
   }
 
@@ -181,7 +181,6 @@ function Popup() {
 
   // /tts/ endpoint related 
   const fetchAudio = async (text, code) => {
-    console.log(text, code)
     const audioResponse = await fetch("https://maomao-dict.onrender.com/tts/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -194,7 +193,6 @@ function Popup() {
     try {
 
       const audio = await fetchAudio(text, code)
-      console.log("audio done")
       return audio
     }    catch (error)
     {console.error("Error while getting audio:", error)}
@@ -331,7 +329,6 @@ function Popup() {
       })
       
       const results = await Promise.all(notePromises);
-      console.log("rererere",results.map(result=>result.result))
       return results.map(result=> result.result)
     } catch(error) {
       setAddError(true)
@@ -413,21 +410,22 @@ function Popup() {
         notesID = await addNotes(deckName, audioFilenames, selectedText, phrases, FrontStruct, explanations, fieldNames)
         if (notesID.length==0) setAddError(true)
         else {
-          console.log("no errors in note addition")
-          chrome.storage.local.get(["wordsNsentences"], (data)=>{
-            console.log("inside storage.local")
-            const prevWordsAndSentences = data.wordsNsentences
-            const currentWordsNsentences = prevWordsAndSentences ?? {}
+          chrome.storage.local.get(["wordsSaved"], (data)=>{
+            const prevwordsSaved = data.wordsSaved
+            const currentwordsSaved = prevwordsSaved ?? {}
             const language = lang.toLowerCase()
             const word = selectedText.toLowerCase()
-            const phrase = contextSentence.toLowerCase()
-            if (!currentWordsNsentences[language]) currentWordsNsentences[language] = {};
+            if (!currentwordsSaved[language]) currentwordsSaved[language] = {};
             
-            if (!currentWordsNsentences[language][word]) currentWordsNsentences[language][word] = []
-            currentWordsNsentences[language][word].push(phrase)
-            // Guardamos nuevamente el objeto actualizado en el almacenamiento
+            if (!currentwordsSaved[language][word]) currentwordsSaved[language][word] = {}
 
-            chrome.storage.local.set({ wordsNsentences: currentWordsNsentences})
+            if (!currentwordsSaved[language][word]["notesIds"]) currentwordsSaved[language][word]["notesIds"] = []
+            if (!currentwordsSaved[language][word]["sentences"]) currentwordsSaved[language][word]["sentences"] = []
+            currentwordsSaved[language][word]["notesIds"].push(...notesID)
+            currentwordsSaved[language][word]["sentences"].push(...phrases)
+
+            // Guardamos nuevamente el objeto actualizado en el almacenamiento
+            chrome.storage.local.set({ wordsSaved: currentwordsSaved})
           })
           setKnownWord(true)
           setNewPhrase(false)
@@ -443,7 +441,6 @@ function Popup() {
   const handleExamples = async (word, lang) => {
     chrome.storage.local.get("popupPrompt", async (data)=>{
       const structure = data.popupPrompt
-      console.log(word, structure, lang)
       const examplesResponse = await fetch("https://maomao-dict.onrender.com/examples/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
