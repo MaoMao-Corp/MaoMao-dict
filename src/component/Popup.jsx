@@ -1,537 +1,146 @@
-import ReactMarkdown from "react-markdown";
 import React, { useState, useEffect, useRef } from "react";
+
+import { PopupHeader } from "./PopupHeader";
+import ReactMarkdown from "react-markdown";
+import { Examples } from "./Examples"
+
+import { 
+    getGlobalOffset, 
+    extractSentence } 
+from "../utils/textUtils";
+import { getCompletion} from "../services/apiService"
+import { getLocalData } from "../services/storageService";
 import '../style/Popup.css';
-import speaker from "../media/speaker.png"
-import add from "../media/add.png"
-import hat from "../media/hat.png"
-import speakerGray from "../media/speaker_gray.png"
 
 function Popup() {
-  const [selectedText, setSelectedText] = useState("");
-  const [contextSentence, setContextSentence] = useState("");
-  const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [definition, setDefinition] = useState("Thinking...");
-  const [knownWord, setKnownWord] = useState(false)
-  const [audioWord, setAudioWord] = useState(null)
-  const [audioSentence, setAudioSentence] = useState(null)
-  const [codeLang, setCodeLang] = useState("")
-  const [addError, setAddError] = useState(false)
-  const [examples, setExamples] = useState([])
-  const [newPhrase, setNewPhrase] = useState(true)
-  const [lang, setLang] = useState("")
-  const [phonetics, setPhonetics] = useState("")
-  // Creamos un ref para el popup
-  const popupRef = useRef(null);
+    const [word, setWord] = useState("");
+    const [sentence, setSentence] = useState("");
+    const [isVisible, setIsVisible] = useState(false);
+    const [position, setPosition] = useState({ top: 0, left: 0 });
+    const [definition, setDefinition] = useState("Thinking...");
+    const [isKnownWord, setIsKnownWord] = useState(false)
+    const [codeLang, setCodeLang] = useState("")
+    const [isNewPhrase, setIsNewPhrase] = useState(true)
+    const [lang, setLang] = useState("")
+    const [phonetics, setPhonetics] = useState("")
+    // Creamos un ref para el popup
+    const popupRef = useRef(null);
 
-  useEffect(() => {
-    const handleSelection = async (event) => {
-      // Si el clic se hizo dentro del popup, no hacemos nada.
-      if (popupRef.current && popupRef.current.contains(event.target))  return;
+    useEffect(() => {
+        const handleSelection = async (event) => {
+            // Si el clic se hizo dentro del popup, no hacemos nada.
+            if (popupRef.current && popupRef.current.contains(event.target))  return;
 
-      const selection = window.getSelection();
-      const selectedWord = selection.toString().trim();
-      
-      
-      if (selectedWord && !selectedWord.includes(" ")) {
-        const range = selection.getRangeAt(0);
-        const commonAncestor = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
-        ? range.commonAncestorContainer.parentElement
-        : range.commonAncestorContainer;
-  
-        const fullText = commonAncestor.textContent;
-    
-        const globalOffset = getGlobalOffset(commonAncestor, range.startContainer, range.startOffset);
-    
-        const sentence = extractSentence(fullText, globalOffset);
-
-        setSelectedText(selectedWord);
-        setContextSentence(sentence);
-        setIsVisible(true);
-        const rect = range.getBoundingClientRect();
-        setPosition({
-          top: rect.top + window.scrollY,
-          left: rect.right + window.scrollX,
-        });
+            const selection = window.getSelection();
+            const selectedWord = selection.toString().trim();
+            
+            
+            if (selectedWord && !selectedWord.includes(" ")) {
+                const range = selection.getRangeAt(0);
+                const commonAncestor = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+                ? range.commonAncestorContainer.parentElement
+                : range.commonAncestorContainer;
         
-        chrome.storage.local.get(["popupPrompt", "savedPhrases", "pronunciationInput"], async (data)=> {
-          const completion = await getCompletion(selectedWord, sentence, data.popupPrompt, data.pronunciationInput); // md (make it an option)
-          
-          const lang = await completion.l
-          const code = await completion.c
-          const def = await completion.d
-          const pron =  await completion.p
-          setCodeLang(code)
-          setDefinition(def);
-          setLang(lang.toLowerCase())
-          setPhonetics(pron)
-          doIknowThisWord(lang.toLowerCase(), selectedWord.toLowerCase())
-          checkIfPhraseSaved(lang.toLowerCase(), selectedWord.toLowerCase(), sentence.toLowerCase())
-        });
+                const fullText = commonAncestor.textContent;
+                const globalOffset = getGlobalOffset(commonAncestor, range.startContainer, range.startOffset);
+                const stnce = extractSentence(fullText, globalOffset);
 
-      } else {
+                setWord(selectedWord);
+                setSentence(stnce);
+                setIsVisible(true);
+                const rect = range.getBoundingClientRect();
+                setPosition({
+                top: rect.top + window.scrollY,
+                left: rect.right + window.scrollX,
+                });
+                
+                const data = await getLocalData(["popupPrompt", "savedPhrases", "pronunciationInput"])
+                const completion = await getCompletion(selectedWord, stnce, data.popupPrompt, data.pronunciationInput); // md (make it an option)
+                
+                setCodeLang(completion.c)
+                setDefinition(completion.d);
+                setLang(completion.l.toLowerCase())
+                setPhonetics(completion.p)
+                doIknowThisWord(completion.l.toLowerCase(), selectedWord.toLowerCase())
+                checkIfPhraseSaved(completion.l.toLowerCase(), selectedWord.toLowerCase(), stnce.toLowerCase())
+                ;
+
+            } else resetPopup()
+            
+        };
+
+        document.addEventListener("mouseup", handleSelection);
+        return () => document.removeEventListener("mouseup", handleSelection);
+    }, []);
+
+    const resetPopup = () =>{
         // undo everything when pop up dissapears
         setIsVisible(false);
         setDefinition("Thinking...");
-        setSelectedText("");
-        setContextSentence("");
+        setWord("");
+        setSentence("");
         setCodeLang("")
-        setKnownWord(false)
-        setAudioWord(null)
-        setAudioSentence(null)
-        setCodeLang("")
-        setAddError(false)
-        setExamples([])
-        setNewPhrase(true)
+        setIsKnownWord(false)
+        setIsNewPhrase(true)
         setLang("")
         setPhonetics("")
-      }
-    };
+    }
 
-    document.addEventListener("mouseup", handleSelection);
-    return () => document.removeEventListener("mouseup", handleSelection);
-  }, []);
+    const doIknowThisWord = async (lang, word) => {
+        const data = await getLocalData(["wordsSaved"])
+        if (!data.wordsSaved || !data.wordsSaved[lang]) return
+        setIsKnownWord(Object.keys(data.wordsSaved[lang]).includes(word.toLowerCase()))
+    }
 
-  const doIknowThisWord = (lang, word) => {
-    chrome.storage.local.get("wordsSaved", (data) => {
-
-      if (!data.wordsSaved || !data.wordsSaved[lang]) return
-      setKnownWord(Object.keys(data.wordsSaved[lang]).includes(word.toLowerCase()))
-    })
-  }
-
-  const checkIfPhraseSaved = (lang, word, phrase) =>
-  {
-    chrome.storage.local.get("wordsSaved", (data)=>{
-      if (!data.wordsSaved || !data.wordsSaved[lang] || !data.wordsSaved[lang][word] || !data.wordsSaved[lang][word]["sentences"]) {
-        setNewPhrase(true)
-        return;
-      }
-      setNewPhrase(!data.wordsSaved[lang][word]["sentences"].includes(phrase))
-    })
-  }
-
-  const getGlobalOffset = (root, node, localOffset) => {
-    let offset = 0;
-  
-    /**
-     * Recursive function that traverses nodes in preorder.
-     * When it finds the target node, it adds the local offset and ends.
-     */
-    const traverse = (current) => {
-      if (current === node) {
-        offset += localOffset;
-        return true; // Found the node
-      }
-  
-      // If it's a text node, add its length.
-      if (current.nodeType === Node.TEXT_NODE) {
-        offset += current.textContent.length;
-      }
-  
-      // Traverse child nodes.
-      for (let i = 0; i < current.childNodes.length; i++) {
-        const child = current.childNodes[i];
-        if (traverse(child)) {
-          return true;
+    const checkIfPhraseSaved = async (lang, word, phrase) =>
+    {
+        const data = await getLocalData(["wordsSaved"])
+        if (!data.wordsSaved || !data.wordsSaved[lang] || !data.wordsSaved[lang][word] || !data.wordsSaved[lang][word]["sentences"]) setIsNewPhrase(true)
+        else    {
+            setIsNewPhrase(!data.wordsSaved[lang][word]["sentences"].includes(phrase))
+            console.log(data.wordsSaved[lang][word]["sentences"], phrase)
         }
-      }
-      return false;
-    };
-  
-    traverse(root);
-    return offset;
-  };
-  
-  const extractSentence = (text, offset) => {
-    let start = offset;
-    let end = offset;
-  
-    // Define sentence-ending punctuation for Korean, Chinese, and Japanese.
-    const sentenceEndPattern = /[。！？\n]/; // Use common punctuation
-  
-    // Move backward to find the start of the sentence.
-    while (start > 0 && !sentenceEndPattern.test(text[start - 1])) {
-      start--;
     }
-    
-    // Move forward to find the end of the sentence.
-    while (end < text.length && !sentenceEndPattern.test(text[end])) {
-      end++;
-    }
-  
-    // Return the sentence in the range.
-    return text.slice(start, end).trim();
-  };
-  
-
-  // /define/ endpoint related
-  const getCompletion = async (word, sentence, structure, pronMethod) =>
-  {
-    const response = await fetch("https://maomao-dict.onrender.com/define/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: word, sentence: sentence, structure: structure, pronunciation: pronMethod}),
-    });
-    
-    const result = await response.json()
-    const completion = await result[0]
-    return completion
-  }
-
-  // /tts/ endpoint related 
-  const fetchAudio = async (text, code) => {
-    const audioResponse = await fetch("https://maomao-dict.onrender.com/tts/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({text, code}),
-    });
-    const audioResult = await audioResponse.json();
-    if (audioResult.audio) return await audioResult.audio
-  }
-  const getAudio = async (text, code) => {
-    try {
-
-      const audio = await fetchAudio(text, code)
-      return audio
-    }    catch (error)
-    {console.error("Error while getting audio:", error)}
-  }
-  
-  // /anki/ endpoint related
-  const getCards = async (word, structure, pronMethod) =>
-  {
-    const ankiResponse = await fetch("https://maomao-dict.onrender.com/ankimulti/", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({word: word, structure: structure, pronunciation: pronMethod})
-    })
-    const ankiResult = await ankiResponse.json()
-    const ankiMulti = await ankiResult[0]
-
-    return [Object.keys(ankiMulti), Object.values(ankiMulti)]
-  }
 
 
+    if (!isVisible) return null;
 
-  // localhost:8765 (anki) related
-  const storeMediaFiles = async (filename, file) => {
-    const storeMediaResponse = await fetch("http://localhost:8765", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "storeMediaFile",
-        version: 6,
-        params: { filename: filename, data: file },
-      }),
-    });
-    const storeMediaResult = await storeMediaResponse.json();
-    if (!storeMediaResult.result) console.error("Error while storing media files")
-  }
-  
-  const getDecks = async () => {
-    const decksResponse = await fetch("http://localhost:8765/", {
-      method : "POST",
-      headers : {"Content-Type": "application/json"},
-      body : JSON.stringify({
-        action: "deckNames",
-        version: 6
-      })
-    })
-    const decksResult = await decksResponse.json()
-    const decks = await decksResult.result
-    return decks
-  }
-
-  const createDeck = async (name) => {
-    const createDeckResponse = await fetch("http://localhost:8765/", 
-      {
-        method : "POST",
-        headers : {"Content-Type":"application/json"},
-        body : JSON.stringify({
-          action: "createDeck",
-          version: 6,
-          params: {
-            deck : name
-          }
-        })
-      }
-    )
-  }
-
-  const getFieldNames = async () => {
-    const modelNamesResponse = await fetch("http://localhost:8765/", 
-      {
-        method : "POST",
-        headers : {"Content-Type":"application/json"},
-        body : JSON.stringify({
-          action: "modelNames",
-          version: 6
-        })
-      }
-    )
-    const modelNamesResult = await modelNamesResponse.json()
-    const modelNames = await modelNamesResult.result
-    const basic = await modelNames[0]
-    const modelFieldResponse = await fetch("http://localhost:8765/", 
-      {
-        method : "POST",
-        headers : {"Content-Type":"application/json"},
-        body : JSON.stringify({
-          action: "modelFieldNames",
-          version: 6,
-          params : {
-            "modelName" : basic
-          }
-        })
-      }
-    )
-    const modelFieldResult = await modelFieldResponse.json()
-    const modelField = await modelFieldResult.result
-    return [...modelField, basic ]
-  }
-
-  const addNotes = async (deckName, audioFilenames, word, sentences, frontStruct, explanations, fields) => {
-    try{
-      const frontKey = fields[0]
-      const backKey = fields[1]
-      const modelName = fields[2]
-      const _ = frontStruct? frontStruct: "$SOUND $SENTENCE ($WORD)"
-
-      const notePromises = sentences.map(async (sentence, index) =>{
-        const explanation = explanations[index]
-        const audioFilename = audioFilenames[index]
-        const front = _.replace("$SOUND", `[sound:${audioFilename}]`).replace("$WORD", `${word}`).replace("$SENTENCE", `${sentence}`)
-
-        return fetch("http://localhost:8765", { 
-          method: "POST", 
-          headers: { "Content-Type": "application/json" }, 
-          body: JSON.stringify({
-            "action": "addNote",
-            "version": 6,
-            "params": {
-              "note": {
-                "deckName": deckName,
-                "modelName": modelName,
-                "fields": {
-                  [frontKey]: front,
-                  [backKey]: explanation
-                },
-                "tags": ["miaumiau"],
-                "options": {
-                  "allowDuplicate": false
-                }
-              }
-            }
-          }
-          )
-        }).then(response=>response.json());
-      })
-      
-      const results = await Promise.all(notePromises);
-      return results.map(result=> result.result)
-    } catch(error) {
-      setAddError(true)
-      console.error("Error while fetching localhost:8765 (anki connect api), MAKE SURE TO HAVE ANKI OPENED ;)", error)
-      return []
-    }
-  }
-
-  const play_audio = (audio64) => {
-
-    const binaryData = atob(audio64); // Decodificar base64 a binario
-        const arrayBuffer = new Uint8Array(binaryData.length);
-        for (let i = 0; i < binaryData.length; i++) {
-          arrayBuffer[i] = binaryData.charCodeAt(i);
-        }
-  
-        const blob = new Blob([arrayBuffer], { type: "audio/mp3" });
-        const url = URL.createObjectURL(blob);
-  
-        // Crear un objeto de audio y reproducirlo directamente
-        const audio = new Audio(url);
-        audio.play();
-  }
-
-  // handle buttons
-  const handleSoundWord = async () => {
-    if (audioWord) play_audio(audioWord);
-    else {
-      const newAudio = await getAudio(selectedText, codeLang)
-      setAudioWord(newAudio)
-      play_audio(newAudio)
-    }
-  }
-  const handleSoundSentence = async () => {
-      if (audioSentence) play_audio(audioSentence);
-      else {
-        const newAudio = await getAudio(contextSentence, codeLang)
-        setAudioSentence(newAudio)
-        play_audio(newAudio)
-      }
-  }  
-
-
-
-  const handleAdd = async () => {
-    try {
-      chrome.storage.local.get(["deckInput","ankiFrontPrompt", "ankiBackPrompt", "pronunciationInput"], async (data)=> {
-        // retrieve local variables
-        
-        const FrontStruct = data.ankiFrontPrompt
-        const backStruct = data.ankiBackPrompt;
-        const pronunciation = data.pronunciationInput
-
-        // Get anki card's back
-        const [phrases, explanations] = await getCards(selectedText, backStruct, pronunciation);
-
-        const deckName = data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", "").replace("$WORD", "") : lang
-        
-        // Get Audio
-        const audioFilenames = phrases.map(sentence=>{return `${sentence}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")})
-        // si no se ha generado el audio, se genera ahora,
-        
-        const audioList = await Promise.all(
-          phrases.map(async (sentence) => getAudio(sentence, codeLang))
-        )       
-        
-        audioFilenames.forEach(async (filename, index)=>{
-          const audio = audioList[index]
-          await storeMediaFiles(filename, audio) // self-explanatory
-        })
-
-        const deckNames = await getDecks()
-        if (!deckNames.includes(deckName)) {
-          await createDeck(deckName)
-        }
-
-        // generar new note
-        const fieldNames = await getFieldNames()
-        notesID = await addNotes(deckName, audioFilenames, selectedText, phrases, FrontStruct, explanations, fieldNames)
-        if (notesID.length==0) setAddError(true)
-        else {
-          chrome.storage.local.get(["wordsSaved"], (data)=>{
-            const prevwordsSaved = data.wordsSaved
-            const currentwordsSaved = prevwordsSaved ?? {}
-            const language = lang.toLowerCase()
-            const word = selectedText.toLowerCase()
-            if (!currentwordsSaved[language]) currentwordsSaved[language] = {};
+    return (
+        <div
+        ref={popupRef} 
+        className="popup-bubble"
+        style={{
+            top: position.top,
+            left: position.left,
+        }}
+        >
+            <PopupHeader
+            word={word}
+            codeLang={codeLang}
+            sentence={sentence}
+            definition={definition}
+            lang={lang}
+            phonetics={phonetics}
+            isKnownWord={isKnownWord}
+            isNewPhrase={isNewPhrase}
+            setIsKnownWord={setIsKnownWord}
+            setIsNewPhrase={setIsNewPhrase}
+            />
             
-            if (!currentwordsSaved[language][word]) currentwordsSaved[language][word] = {}
-
-            if (!currentwordsSaved[language][word]["notesIds"]) currentwordsSaved[language][word]["notesIds"] = []
-            if (!currentwordsSaved[language][word]["sentences"]) currentwordsSaved[language][word]["sentences"] = []
-            currentwordsSaved[language][word]["notesIds"].push(...notesID)
-            currentwordsSaved[language][word]["sentences"].push(...phrases)
-
-            // Guardamos nuevamente el objeto actualizado en el almacenamiento
-            chrome.storage.local.set({ wordsSaved: currentwordsSaved})
-          })
-          setKnownWord(true)
-          setNewPhrase(false)
-        }
-    })} 
-    // catch error
-    catch (error) {
-      console.log(error)
-      setAddError(true)
-      console.error("Error while adding card to anki: ", error);
-    }
-  }
-  const handleExamples = async (word, lang) => {
-    chrome.storage.local.get("popupPrompt", async (data)=>{
-      const structure = data.popupPrompt
-      const examplesResponse = await fetch("https://maomao-dict.onrender.com/examples/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({word:word, structure: structure, lang: lang}),
-      });
-      const examplesResult = await examplesResponse.json()
-      const examples = await examplesResult[0]
-      setExamples(examples)
-    })
-
-  }
-
-  const handleClickExample = (index) => {
-    const currentExamples = examples
-
-    checkIfPhraseSaved(lang, selectedText, Object.keys(currentExamples)[index])
-    setContextSentence(Object.keys(currentExamples)[index])
-    setDefinition(Object.values(currentExamples)[index])
-    setAudioSentence(null)
-
-    delete currentExamples[Object.keys(currentExamples)[index]]
-    currentExamples[contextSentence]= definition
-    setExamples(currentExamples)
-  }
-  if (!isVisible) return null;
-
-  return (
-    <div
-      ref={popupRef} 
-      className="popup-bubble"
-      style={{
-        top: position.top,
-        left: position.left,
-        transform: "translate(0, -100%)"
-      }}
-    >
-      <div className="popup-header">
-        <h2 className="word">{selectedText}</h2>
-        <p className="phonetics">{phonetics}</p>
-        {codeLang && <img
-          src={speaker}
-          alt="sound button"
-          className="audio-img"
-          onClick={handleSoundWord}
-        />}
-        <div className="img-derecha">
-          {knownWord && <img src={hat} className="hat-img"></img>}
-          {(newPhrase && !addError) && <img
-          src={add}
-          alt="add button"
-          className="add-img"
-          onClick={()=>handleAdd(selectedText, contextSentence, audioSentence)}></img> }
-
-          {(!newPhrase && !addError) &&  <svg
-            className="tick-img"
-            width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5 12L10 17L20 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>}
-          
-            {addError && <svg
-            className="error-img"
-            width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <line x1="10" y1="10" x2="90" y2="90" stroke="white" stroke-width="20" stroke-linecap="round"/>
-            <line x1="90" y1="10" x2="10" y2="90" stroke="white" stroke-width="20" stroke-linecap="round"/>
-            </svg>
-            }
+            <ReactMarkdown className="definition">{definition}</ReactMarkdown>
+            <Examples
+                word={word}
+                sentence= {sentence}
+                definition = {definition}
+                lang={lang}
+                codeLang={codeLang}
+                checkIfPhraseSaved={checkIfPhraseSaved}
+                setSentence={setSentence}
+                setDefinition={setDefinition}
+            />
 
         </div>
-        </div>
-      <div className="sentence-block">
-        <p className="sentence" style={{ fontStyle: "italic", color: "#888" }}>
-          {contextSentence}
-        </p>
-        {codeLang && <img
-          src={speakerGray}
-          alt="sound button"
-          className="audio-sentence audio-img"
-          onClick={handleSoundSentence}
-        />}
-      </div>
-      <ReactMarkdown className="definition">{definition}</ReactMarkdown>
-      <div>
-        <p className="example-hitbox" onClick={()=>handleExamples(selectedText, codeLang)}>Examples</p>
-        <ul className="examples-list">
-          {Object.keys(examples).length>0 && Object.keys(examples).map((example, index)=>
-          <li key={index} className="example" onClick={()=>handleClickExample(index)}> {example} </li>
-          )}
-        </ul>
-      </div>
-    </div>
-  );
+    );
 }
 
 
