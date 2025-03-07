@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MaoMao Dict",
-  "version": "2.0",
+  "version": "2.1.000",
   "description": "Miau miau meow meow mao mao 🐱",
   "permissions": [
     "activeTab",
