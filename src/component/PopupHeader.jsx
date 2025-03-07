@@ -32,9 +32,6 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
     const [addError, setAddError] = useState(false)
     const [multiAdded, setMultiAdded] = useState(false)
 
-
-      
-    
     useEffect(()=>{
         setAudioSentence(null)
         setMultiAdded(false)
@@ -179,7 +176,7 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
                 />}
                 <div className="img-derecha">
                     {
-                        isKnownWord && <img src={hat} className="hat-img"></img>
+                        (multiAdded || isKnownWord) && <img src={hat} className="hat-img"></img>
                     }
                     {
                         (!multiAdded && !addError) && <img

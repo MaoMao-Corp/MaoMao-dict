@@ -90,6 +90,9 @@ function Popup() {
         const data = await getLocalData(["wordsSaved"])
         if (!data.wordsSaved || !data.wordsSaved[lang]) return
         setIsKnownWord(Object.keys(data.wordsSaved[lang]).includes(word.toLowerCase()))
+        console.log(Object.keys(data.wordsSaved[lang]).includes(word.toLowerCase()))
+        console.log(Object.keys(data.wordsSaved[lang]))
+        
     }
 
     const checkIfPhraseSaved = async (lang, word, phrase) =>
