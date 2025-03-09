@@ -1,6 +1,7 @@
 // /define/ endpoint related
 export const getCompletion = async (word, sentence, structure, pronMethod) =>
 {
+    console.log("fetching new")
     const response = await fetch("https://maomao-dict.onrender.com/define/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

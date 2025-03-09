@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-
 import { PopupHeader } from "./PopupHeader";
 import ReactMarkdown from "react-markdown";
-import { Examples } from "./Examples"
-
+import { Examples } from "./Examples";
 import { 
     getGlobalOffset, 
-    extractSentence } 
-from "../utils/textUtils";
-import { getCompletion} from "../services/apiService"
+    extractSentence 
+} from "../utils/textUtils";
+import { getCompletion } from "../services/apiService";
 import { getLocalData } from "../services/storageService";
 import '../style/Popup.css';
 
@@ -18,133 +16,155 @@ function Popup() {
     const [isVisible, setIsVisible] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const [definition, setDefinition] = useState("Thinking...");
-    const [isKnownWord, setIsKnownWord] = useState(false)
-    const [codeLang, setCodeLang] = useState("")
-    const [isNewPhrase, setIsNewPhrase] = useState(true)
-    const [lang, setLang] = useState("")
-    const [phonetics, setPhonetics] = useState("")
-    // Creamos un ref para el popup
+    const [isKnownWord, setIsKnownWord] = useState(false);
+    const [codeLang, setCodeLang] = useState("");
+    const [isNewPhrase, setIsNewPhrase] = useState(true);
+    const [lang, setLang] = useState("");
+    const [phonetics, setPhonetics] = useState("");
     const popupRef = useRef(null);
+    const mousePosRef = useRef({ x: 0, y: 0 });
+    const isVisibleRef = useRef(isVisible);
 
     useEffect(() => {
-        const handleSelection = async (event) => {
-            // Si el clic se hizo dentro del popup, no hacemos nada.
-            if (popupRef.current && popupRef.current.contains(event.target))  return;
+        isVisibleRef.current = isVisible;
+    }, [isVisible]);
 
-            const selection = window.getSelection();
-            const selectedWord = selection.toString().trim();
-            
-            
-            if (selectedWord && !selectedWord.includes(" ")) {
-                const range = selection.getRangeAt(0);
-                const commonAncestor = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
-                ? range.commonAncestorContainer.parentElement
-                : range.commonAncestorContainer;
-        
-                const fullText = commonAncestor.textContent;
-                const globalOffset = getGlobalOffset(commonAncestor, range.startContainer, range.startOffset);
-                const stnce = extractSentence(fullText, globalOffset);
-
-                setWord(selectedWord);
-                setSentence(stnce);
-                setIsVisible(true);
-                const rect = range.getBoundingClientRect();
-                setPosition({
-                top: rect.top + window.scrollY,
-                left: rect.right + window.scrollX,
-                });
-                
-                const data = await getLocalData(["popupPrompt", "savedPhrases", "pronunciationInput"])
-                const completion = await getCompletion(selectedWord, stnce, data.popupPrompt, data.pronunciationInput); // md (make it an option)
-                
-                setCodeLang(completion.c)
-                setDefinition(completion.d);
-                setLang(completion.l.toLowerCase())
-                setPhonetics(completion.p)
-                doIknowThisWord(completion.l.toLowerCase(), selectedWord.toLowerCase())
-                checkIfPhraseSaved(completion.l.toLowerCase(), selectedWord.toLowerCase(), stnce.toLowerCase())
-                ;
-
-            } else resetPopup()
-            
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            mousePosRef.current = { x: e.clientX, y: e.clientY };
         };
-
-        document.addEventListener("mouseup", handleSelection);
-        return () => document.removeEventListener("mouseup", handleSelection);
+        document.addEventListener('mousemove', handleMouseMove);
+        return () => document.removeEventListener('mousemove', handleMouseMove);
     }, []);
 
-    const resetPopup = () =>{
-        // undo everything when pop up dissapears
+    useEffect(() => {
+        const handleKeyDown = async (e) => {
+            if (e.key === 'Shift' && !isVisibleRef.current) {
+                const { x, y } = mousePosRef.current;
+                const range = document.caretRangeFromPoint(x, y);
+                if (range) {
+                    const clonedRange = range.cloneRange();
+                    clonedRange.expand('word');
+                    const selectedWord = clonedRange.toString().trim();
+                    
+                    if (selectedWord && !selectedWord.includes(' ')) {
+                        const commonAncestor = clonedRange.commonAncestorContainer.nodeType === Node.TEXT_NODE
+                            ? clonedRange.commonAncestorContainer.parentElement
+                            : clonedRange.commonAncestorContainer;
+
+                        const fullText = commonAncestor.textContent;
+                        const globalOffset = getGlobalOffset(commonAncestor, clonedRange.startContainer, clonedRange.startOffset);
+                        const stnce = extractSentence(fullText, globalOffset);
+
+                        setWord(selectedWord);
+                        setSentence(stnce);
+                        setIsVisible(true);
+                        const rect = clonedRange.getBoundingClientRect();
+                        // En la función que actualiza la posición:
+                        setPosition({
+                            top: Math.min(      // Previene que el popup salga de la pantalla
+                            rect.top + window.scrollY, 
+                            window.innerHeight - 100 // 100px margen inferior
+                            ),
+                            left: rect.right + window.scrollX,
+                        });
+
+                        const data = await getLocalData(["popupPrompt", "savedPhrases", "pronunciationInput"]);
+                        const completion = await getCompletion(selectedWord, stnce, data.popupPrompt, data.pronunciationInput);
+                        
+                        setCodeLang(completion.c);
+                        setDefinition(completion.d);
+                        setLang(completion.l?.toLowerCase());
+                        setPhonetics(completion.p);
+                        doIknowThisWord(completion.l?.toLowerCase(), selectedWord.toLowerCase());
+                        checkIfPhraseSaved(completion.l?.toLowerCase(), selectedWord.toLowerCase(), stnce.toLowerCase());
+                    }
+                }
+            }
+        };
+
+        const handleKeyUp = (e) => {
+            if (e.key === 'Shift') {
+                resetPopup();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('keyup', handleKeyUp);
+        };
+    }, []);
+
+    const resetPopup = () => {
         setIsVisible(false);
         setDefinition("Thinking...");
         setWord("");
         setSentence("");
-        setCodeLang("")
-        setIsKnownWord(false)
-        setIsNewPhrase(true)
-        setLang("")
-        setPhonetics("")
-    }
+        setCodeLang("");
+        setIsKnownWord(false);
+        setIsNewPhrase(true);
+        setLang("");
+        setPhonetics("");
+    };
 
     const doIknowThisWord = async (lang, word) => {
-        const data = await getLocalData(["wordsSaved"])
-        if (!data.wordsSaved || !data.wordsSaved[lang]) return
-        setIsKnownWord(Object.keys(data.wordsSaved[lang]).includes(word.toLowerCase()))
-        console.log(Object.keys(data.wordsSaved[lang]).includes(word.toLowerCase()))
-        console.log(Object.keys(data.wordsSaved[lang]))
-        
-    }
+        const data = await getLocalData(["wordsSaved"]);
+        if (!data.wordsSaved || !data.wordsSaved[lang]) return;
+        setIsKnownWord(Object.keys(data.wordsSaved[lang]).includes(word.toLowerCase()));
+    };
 
-    const checkIfPhraseSaved = async (lang, word, phrase) =>
-    {
-        const data = await getLocalData(["wordsSaved"])
-        if (!data.wordsSaved || !data.wordsSaved[lang] || !data.wordsSaved[lang][word] || !data.wordsSaved[lang][word]["sentences"]) setIsNewPhrase(true)
-        else    {
-            setIsNewPhrase(!data.wordsSaved[lang][word]["sentences"].includes(phrase))
-            console.log(data.wordsSaved[lang][word]["sentences"], phrase)
+    const checkIfPhraseSaved = async (lang, word, phrase) => {
+        const data = await getLocalData(["wordsSaved"]);
+        if (!data.wordsSaved || !data.wordsSaved[lang] || !data.wordsSaved[lang][word] || !data.wordsSaved[lang][word]["sentences"]) {
+            setIsNewPhrase(true);
+        } else {
+            setIsNewPhrase(!data.wordsSaved[lang][word]["sentences"].includes(phrase));
         }
-    }
+    };
 
+    const handlePopupWheel = (e) => {
+        e.stopPropagation()
+    }
 
     if (!isVisible) return null;
 
     return (
         <div
-        ref={popupRef} 
-        className="popup-bubble"
-        style={{
-            top: position.top,
-            left: position.left,
-        }}
+            ref={popupRef}
+            className="popup-bubble"
+            onWheel={handlePopupWheel}
+            style={{
+                top: position.top,
+                left: position.left,
+            }}
         >
             <PopupHeader
-            word={word}
-            codeLang={codeLang}
-            sentence={sentence}
-            definition={definition}
-            lang={lang}
-            phonetics={phonetics}
-            isKnownWord={isKnownWord}
-            isNewPhrase={isNewPhrase}
-            setIsKnownWord={setIsKnownWord}
-            setIsNewPhrase={setIsNewPhrase}
+                word={word}
+                codeLang={codeLang}
+                sentence={sentence}
+                definition={definition}
+                lang={lang}
+                phonetics={phonetics}
+                isKnownWord={isKnownWord}
+                isNewPhrase={isNewPhrase}
+                setIsKnownWord={setIsKnownWord}
+                setIsNewPhrase={setIsNewPhrase}
             />
-            
             <ReactMarkdown className="definition">{definition}</ReactMarkdown>
             <Examples
                 word={word}
-                sentence= {sentence}
-                definition = {definition}
+                sentence={sentence}
+                definition={definition}
                 lang={lang}
                 codeLang={codeLang}
                 checkIfPhraseSaved={checkIfPhraseSaved}
                 setSentence={setSentence}
                 setDefinition={setDefinition}
             />
-
         </div>
     );
 }
-
 
 export default Popup;
