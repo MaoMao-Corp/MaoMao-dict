@@ -159,6 +159,7 @@ export const addMultipleNotes = async (deckName, audioFilenames, word, sentences
         const notePromises = sentences.map(async (sentence, index) => addNote(deckName, audioFilenames[index], word, sentence, frontStruct, explanations[index], fields))
     
         const results = await Promise.all(notePromises);
+        console.log(results)
         return results.map(result=> result.result)
     } catch(error) {
         setAddError(true)
@@ -174,6 +175,7 @@ export const addNote = async (deckName, audioFilename, word, sentence, frontStru
 
     const _ = frontStruct? frontStruct: "$SOUND $SENTENCE ($WORD)"
     const front = _.replace("$SOUND", `[sound:${audioFilename}]`).replace("$WORD", `${word}`).replace("$SENTENCE", `${sentence}`)
+    console.log({word:word, deckName:deckName, modelName: modelName, frontKey:frontKey, front:front, backKey:backKey, explanation:explanation})
     return fetch("http://localhost:8765", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
@@ -188,7 +190,7 @@ export const addNote = async (deckName, audioFilename, word, sentence, frontStru
                         [frontKey]: front,
                         [backKey]: explanation
                     },
-                    "tags": ["miaumiau"],
+                    "tags": ["miaumiau", word],
                     "options": {
                         "allowDuplicate": false
                     }

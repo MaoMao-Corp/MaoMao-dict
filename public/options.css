@@ -1,4 +1,3 @@
-/* styles.css */
 body {
     background-color: #121212;
     color: #e0e0e0;
@@ -76,6 +75,30 @@ input[type="radio"]:checked::before {
     transform: translate(-50%, -50%);
 }
 
+.lang-header
+{
+    display: flex;
+}
+.lang-header>div{
+
+    margin-left: auto;
+    display: flex;
+    gap: 5px;
+}
+#deck-load-button{
+    margin-top: 10px;
+    height: 30px;
+    padding: 0;
+    width: 100px;
+    font-size: small;
+    font-weight: bold;
+}
+#deck-load-input{
+    height: 10px;
+    width: 200px;
+    resize: none;
+    overflow: hidden;    
+}
 
 /* Contenedor de botones de idiomas */
 #languagesContainer {
@@ -131,4 +154,6 @@ input[type="radio"]:checked::before {
 {
     background-color: red;
 }
+
+
 

@@ -87,6 +87,7 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
             // generar new note
             const fieldNames = await getFieldNames()
             notesID = await addMultipleNotes(deckName, audioFilenames, word, phrases, FrontStruct, explanations, fieldNames)
+            console.log(notesID)
             if (notesID.length==0) setAddError(true)
             else {
                 const currentWordsSaved = data.wordsSaved ?? {}
@@ -141,7 +142,9 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
         }
         // generar new note
         const fieldNames = await getFieldNames()
-        const noteID = await (await addNote(deckName, audioFilename, word, sentence, FrontStruct, back, fieldNames)).result
+        const borrar =  await addNote(deckName, audioFilename, word, sentence, FrontStruct, back, fieldNames)
+        console.log("borrar", borrar)
+        const noteID = await borrar.result
         console.log(noteID)
         if (!noteID) setAddError(true)
         else {

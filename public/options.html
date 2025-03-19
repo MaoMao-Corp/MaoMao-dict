@@ -16,8 +16,13 @@
     <textarea id="ankiBackInput" placeholder="Write the format of the back face of your anki card...">create back of an anki card of the meaning of "$WORD" in "$SENTENCE" very brief</textarea>
     <textarea id="pronunciationInput" placeholder="Write the phonetic transcription method">IPA</textarea>
 
-    <!-- Sección para mostrar los idiomas guardados -->
-    <h2>Languages</h2>
+    <div class="lang-header">
+        <h2>Languages</h2>
+        <div>
+            <textarea id="deck-load-input"></textarea>
+            <button id="deck-load-button" >Load</button>
+        </div>
+    </div>
     <div id="languagesContainer">
       <!-- Aquí se generarán los radio buttons de forma dinámica -->
     </div>
