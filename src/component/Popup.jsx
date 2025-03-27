@@ -38,10 +38,17 @@ function Popup() {
     }, []);
 
     useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (popupRef.current && !popupRef.current.contains(e.target)) {
+                resetPopup();
+            }
+        };
+
         const handleKeyDown = async (e) => {
             if (e.key === 'Shift' && !isVisibleRef.current) {
                 const { x, y } = mousePosRef.current;
                 const range = document.caretRangeFromPoint(x, y);
+                
                 if (range) {
                     const clonedRange = range.cloneRange();
                     clonedRange.expand('word');
@@ -59,18 +66,18 @@ function Popup() {
                         setWord(selectedWord);
                         setSentence(stnce);
                         setIsVisible(true);
+                        
                         const rect = clonedRange.getBoundingClientRect();
-                        // En la función que actualiza la posición:
                         setPosition({
-                            top: Math.min(      // Previene que el popup salga de la pantalla
-                            rect.top + window.scrollY, 
-                            window.innerHeight - 100 // 100px margen inferior
+                            top: Math.min(
+                                rect.top + window.scrollY,
+                                window.innerHeight - 100
                             ),
                             left: rect.right + window.scrollX,
                         });
 
-                        const data = await getLocalData(["popupPrompt", "savedPhrases", "pronunciationInput"]);
-                        const completion = await getCompletion(selectedWord, stnce, data.popupPrompt, data.pronunciationInput);
+                        const data = await getLocalData(["definition", "pronunciation"]);
+                        const completion = await getCompletion(selectedWord, stnce, data.definition, data.pronunciation);
                         
                         setCodeLang(completion.c);
                         setDefinition(completion.d);
@@ -83,20 +90,14 @@ function Popup() {
             }
         };
 
-        const handleKeyUp = (e) => {
-            if (e.key === 'Shift') {
-                resetPopup();
-            }
-        };
-
+        document.addEventListener('click', handleClickOutside);
         document.addEventListener('keydown', handleKeyDown);
-        document.addEventListener('keyup', handleKeyUp);
+        
         return () => {
+            document.removeEventListener('click', handleClickOutside);
             document.removeEventListener('keydown', handleKeyDown);
-            document.removeEventListener('keyup', handleKeyUp);
         };
     }, []);
-
     const resetPopup = () => {
         setIsVisible(false);
         setDefinition("Thinking...");

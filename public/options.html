@@ -10,11 +10,14 @@
   <div class="container">
     <h1>Customization</h1>
     <p>Reserved words: <code>$SENTENCE</code>, <code>$WORD</code>, <code>$AUDIO</code></p>
-    <textarea id="promptInput" placeholder="Write the prompt of the popup">for '$SENTENCE' explain '$WORD' extremely brief</textarea>
-    <textarea id="deckInput" placeholder="Write the name of your deck, if none it would be added to <lang>...">Korean</textarea>
-    <textarea id="ankiFrontInput" placeholder="Write the format of the front face of your anki card...">$SOUND $SENTENCE ($WORD)</textarea>
-    <textarea id="ankimultiExamples" placeholder="Writhe the prompt for the examples in your anki card"></textarea>
-    <textarea id="ankiBackInput" placeholder="Write the format of the back face of your anki card...">create A2 level phrase examples of $WORD and break the phrase (each word) down</textarea>
+    <textarea id="definitionInput" placeholder="Write the prompt of the popup">for '$SENTENCE' explain '$WORD' extremely brief</textarea>
+    <textarea id="ankiStructFrontInput" placeholder="Write the format of the front face of your anki card...">$SOUND $SENTENCE ($WORD)</textarea>
+
+    <textarea id="ankiMultiFrontInput" placeholder="Writhe the prompt for the examples in your anki card"></textarea>
+    <textarea id="ankiMultiBackInput" placeholder="Write the format of the back face of your anki card...">create A2 level phrase examples of $WORD and break the phrase (each word) down</textarea>
+    
+    <textarea id="ankiBackInput">translate $SENTENCE</textarea>
+    
     <textarea id="pronunciationInput" placeholder="Write the phonetic transcription method">katakana</textarea>
 
     <div class="lang-header">
@@ -29,7 +32,7 @@
     </div>
     <p id="knownWordsDisplay">Select your language to see the known words...</p>
 
-    <button id="savePrompt">Save</button>
+    <button id="saveButton">Save</button>
   </div>
   <script src="options.js"></script>
 </body>

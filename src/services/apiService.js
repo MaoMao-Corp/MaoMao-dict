@@ -2,14 +2,17 @@
 export const getCompletion = async (word, sentence, structure, pronMethod) =>
 {
     console.log(word, sentence, structure, pronMethod)
+    console.log("fdsfsa")
     const response = await fetch("https://maomao-dict.onrender.com/define/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ word: word, sentence: sentence, structure: structure, pronunciation: pronMethod}),
     });
-      
+    
+    console.log("aaa")
     const result = await response.json()
     const completion = await result[0]
+    console.log(completion)
     return completion
 }
 

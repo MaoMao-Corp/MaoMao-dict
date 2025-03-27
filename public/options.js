@@ -1,34 +1,35 @@
 
+// Referencias a los elementos de configuración
+const definitionInput = document.getElementById("definitionInput");
+const ankiStructFrontInput = document.getElementById("ankiStructFrontInput");
+const ankiMultiFrontInput = document.getElementById("ankiMultiFrontInput")
+const ankiMultiBackInput = document.getElementById("ankiMultiBackInput");
+const ankiBackInput = document.getElementById("ankiBackInput");
+const pronunciationInput = document.getElementById("pronunciationInput")
+const saveButton = document.getElementById("saveButton");
 
-    // Referencias a los elementos de configuración
-    const promptInput = document.getElementById("promptInput");
-    const deckInput = document.getElementById("deckInput");
-    const ankiFrontInput = document.getElementById("ankiFrontInput");
-    const ankiBackInput = document.getElementById("ankiBackInput");
-    const pronInput = document.getElementById("pronunciationInput")
-    const saveButton = document.getElementById("savePrompt");
-    const ankimultiExamples = document.getElementById("ankimultiExamples")
+// Elementos para la visualización de las palabras conocidas por idioma
+const languagesContainer = document.getElementById("languagesContainer");
+const knownWordsDisplay = document.getElementById("knownWordsDisplay");
 
-    // Elementos para la visualización de las palabras conocidas por idioma
-    const languagesContainer = document.getElementById("languagesContainer");
-    const knownWordsDisplay = document.getElementById("knownWordsDisplay");
-    
-    // Cargar la configuración guardada
-    chrome.storage.local.get(
-        ["popupPrompt", "deckInput", "ankiFrontPrompt", "ankiBackPrompt", "pronunciationInput", "ankimultiExamples"],
-        (data) => {
-        console.log(data)
-        if (data.popupPrompt || data.popupPrompt=="") promptInput.value = data.popupPrompt;
-        if (data.deckInput || data.popupPrompt=="") deckInput.value = data.deckInput;
-        if (data.ankiFrontPrompt || data.popupPrompt=="") ankiFrontInput.value = data.ankiFrontPrompt;
-        if (data.ankiBackPrompt || data.popupPrompt=="") ankiBackInput.value = data.ankiBackPrompt;
-        if (data.pronunciationInput) pronInput.value=data.pronunciationInput
-        if (data.ankimultiExamples) ankimultiExamples.value= data.ankimultiExamples
-        }
-    );
+// Cargar la configuración guardada
+chrome.storage.local.get(
+    ["definition", "ankiStructFront", "ankiMultiFront", "ankiMultiBack", "ankiBack", "pronunciation"],
+    (data) => {
+    console.log(data)
 
-    // Cargar el diccionario de palabras conocidas
-    chrome.storage.local.get("wordsSaved", (data) => {
+    definitionInput.value = data.definition
+    ankiStructFrontInput.value = data.ankiStructFront
+    ankiMultiFrontInput.value = data.ankiMultiFront
+    ankiMultiBackInput.value = data.ankiMultiBack
+    ankiBackInput.value = data.ankiBack
+    pronunciationInput.value = data.pronunciation
+    }
+);
+
+
+// Cargar el diccionario de palabras conocidas
+chrome.storage.local.get("wordsSaved", (data) => {
         if (data.wordsSaved && Object.keys(data.wordsSaved).length > 0) {
         const idiomas = Object.keys(data.wordsSaved);
         idiomas.forEach((idioma, index) => {
@@ -51,18 +52,17 @@
             languagesContainer.appendChild(languageButton);
         });
         } else {
-        knownWordsDisplay.innerText = "No hay palabras conocidas guardadas.";
+        knownWordsDisplay.innerText = "There are no known words";
         }
-    });
-
-    // Función para mostrar las palabras conocidas como elementos clickables
-    function displayKnownWords(idioma, palabrasObj, data) {
+});
+// Función para mostrar las palabras conocidas como elementos clickables
+function displayKnownWords(idioma, palabrasObj, data) {
         // Limpiar el contenedor de palabras
         knownWordsDisplay.innerHTML = "";
         
         // Crear un título para el idioma
         const title = document.createElement("p");
-        title.innerText = `Palabras en ${idioma}:`;
+        title.innerText = `Words known in ${idioma}:`;
         knownWordsDisplay.appendChild(title);
         
         // Crear un contenedor con scroll para las palabras
@@ -115,23 +115,20 @@
         
         scrollContainer.appendChild(wordsContainer);
         knownWordsDisplay.appendChild(scrollContainer);
-    }
-    
+}
 
-    // Guardar la configuración
-    saveButton.addEventListener("click", () => {
-        chrome.storage.local.set({
-        popupPrompt: promptInput.value,
-        deckInput: deckInput.value,
-        ankiFrontPrompt: ankiFrontInput.value,
-        ankiBackPrompt: ankiBackInput.value,
-        pronunciationInput: pronInput.value,
-        ankimultiExamples: ankimultiExamples.value
-        });
-        alert("Prompt saved!");
+// Guardar la configuración
+saveButton.addEventListener("click", () => {
+    chrome.storage.local.set({
+        definition : definitionInput.value,
+        ankiStructFront : ankiStructFrontInput.value,
+        ankiMultiFront : ankiMultiFrontInput.value,
+        ankiMultiBack : ankiMultiBackInput.value,
+        ankiBack : ankiBackInput.value,
+        pronunciation : pronunciationInput.value,
     });
-
-
+    alert("Prompt saved!");
+});
 
 document.getElementById("deck-load-button").addEventListener("click", async () => {
     let deck = document.getElementById("deck-load-input").value
@@ -145,14 +142,12 @@ document.getElementById("deck-load-button").addEventListener("click", async () =
                 "query":`deck:${deck}`
             }
         })
-    })
-
+        })
     const results = await response.json()
     const ids = await results.result
-
     console.log(ids)
     let wordsSaved = await new Promise((resolve) => {    chrome.storage.local.get("wordsSaved", data=>resolve(data.wordsSaved))    })
-      
+    
     await ids.forEach(async (id)=>{
         const response = await fetch("http://localhost:8765", {
             method: "POST",
@@ -171,23 +166,19 @@ document.getElementById("deck-load-button").addEventListener("click", async () =
             const word = await tags.filter(item=>item!=="miaumiau")
             console.log(word[0])
             const deck_ = deck.toLowerCase()
-
             wordsSaved ||= {}
             wordsSaved[deck_] ||= {}
             wordsSaved[deck_][word] ||= {}
             wordsSaved[deck_][word].notesIds ||= []
             wordsSaved[deck_][word].sentences ||= []
-
             if (!wordsSaved[deck.toLowerCase()][word].notesIds.includes(id)){
                 wordsSaved[deck.toLowerCase()][word].notesIds.push(id)
                 chrome.storage.local.set({wordsSaved: wordsSaved})
             } else console.log(id, " already added")
-
-
         }catch(e){
             console.error(e)
         }
     })
-    
+
     chrome.storage.local.get("wordsSaved", (data) => console.log(data.wordsSaved))
 })

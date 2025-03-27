@@ -33,6 +33,8 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
     const [multiAdded, setMultiAdded] = useState(false)
 
     const [decks, setDecks] = useState([])
+    const [selectedDeck, setSelectedDeck] = useState("")
+
 
     useEffect(()=>{
         setAudioSentence(null)
@@ -61,27 +63,30 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
     const handleSelectDeck = async() => {
         const decks = await getDecks()
         setDecks(decks)
+    }
 
+    const handleChangeDeck = async(event) => {
+        const d = event.target.value
+        setSelectedDeck(d)
     }
     
     const handleAddMulti = async () => {
         try {
-            const data = await getLocalData(["deckInput","ankiFrontPrompt", "ankiBackPrompt", "pronunciationInput", "wordsSaved", "ankimultiExamples"])
+            const data = await getLocalData(["ankiStructFront", "ankiMultiBack", "pronunciation", "wordsSaved", "ankiMultiFront"])
             // retrieve local variables
             
-            const FrontStruct = data.ankiFrontPrompt
-            const backStruct = data.ankiBackPrompt;
-            const pronunciation = data.pronunciationInput
-            const ankimultiExamplesPrompt = data.ankimultiExamples
+            const FrontStruct = data.ankiStructFront
+            const backStruct = data.ankiMultiBack
+            const pronunciation = data.pronunciation
+            const ankiMultiFront = data.ankiMultiFront
             // Get anki card's back
-            const [phrases, explanations] = await getCards(word, ankimultiExamplesPrompt,backStruct, pronunciation);
+            const [phrases, explanations] = await getCards(word, ankiMultiFront,backStruct, pronunciation);
             phrases.forEach((p)=>{
                 console.log(p)
             })
-            const deckName = data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", "").replace("$WORD", "") : lang
             
             // Get Audio
-            const audioFilenames = phrases.map(sntce=>{return `${sntce}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")})
+            const audioFilenames = phrases.map(sntce=>{return `${sntce}_${selectedDeck}_${codeLang}.mp3`.replace(/\s/g, "")})
             // si no se ha generado el audio, se genera ahora,
             
             const audioList = await Promise.all(phrases.map((stnce) => fetchAudio(stnce, codeLang)))
@@ -89,14 +94,10 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
             await Promise.all(audioFilenames.map((filename, index)=>{
                 storeMediaFiles(filename, audioList[index]) // self-explanatory
             }))        
-            const deckNames = await getDecks()
-            if (!deckNames.includes(deckName)) {
-                await createDeck(deckName)
-            }
         
             // generar new note
             const fieldNames = await getFieldNames()
-            notesID = await addMultipleNotes(deckName, audioFilenames, word, phrases, FrontStruct, explanations, fieldNames)
+            notesID = await addMultipleNotes(selectedDeck, audioFilenames, word, phrases, FrontStruct, explanations, fieldNames)
             console.log(notesID)
             if (notesID.length==0) setAddError(true)
             else {
@@ -126,17 +127,16 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
     }
     
     const handleAdd = async () => {
-        console.log("only add this sentence")
-        const data = await getLocalData(["deckInput","ankiFrontPrompt", "ankiBackPrompt", "pronunciationInput", "wordsSaved"])
+        const data = await getLocalData(["ankiStructFront", "ankiBack", "pronunciation", "wordsSaved"])
         
         // retrieve local variables
-        const FrontStruct = data.ankiFrontPrompt
-        const backStruct = data.ankiBackPrompt;
-        const pronunciation = data.pronunciationInput
+        const FrontStruct = data.ankiStructFront
+        const backStruct = data.ankiBack
+        const pronunciation = data.pronunciation
         // Get anki card's back
         const back = backStruct? await getBack(word, sentence, backStruct, pronunciation) : definition
         
-        const deckName = data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", "").replace("$WORD", "") : lang
+        const deckName = selectedDeck
         
         // Get Audio
         const audioFilename = `${sentence}_${deckName}_${codeLang}.mp3`.replace(/\s/g, "")
@@ -146,10 +146,7 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
 
         await storeMediaFiles(audioFilename, audio) // self-explanatory
                 
-        const deckNames = await getDecks()
-        if (!deckNames.includes(deckName)) {
-            await createDeck(deckName)
-        }
+
         // generar new note
         const fieldNames = await getFieldNames()
         const borrar =  await addNote(deckName, audioFilename, word, sentence, FrontStruct, back, fieldNames)
@@ -188,10 +185,10 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
                     onClick={handleSoundWord}
                 />}
                 <div className="img-derecha">
-                    <select name="deck-select" id="deck-select" onClick={handleSelectDeck}>
+                    <select name="deck-select" id="deck-select" onChange={handleChangeDeck} onClick={handleSelectDeck}>
                         {
                             decks.map((deck) =>(
-                                <option value="deck">{deck}</option>)
+                                <option value={deck}>{deck}</option>)
                             )
                         }
                     </select>
