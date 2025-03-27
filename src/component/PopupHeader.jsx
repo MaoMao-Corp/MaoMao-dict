@@ -32,6 +32,8 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
     const [addError, setAddError] = useState(false)
     const [multiAdded, setMultiAdded] = useState(false)
 
+    const [decks, setDecks] = useState([])
+
     useEffect(()=>{
         setAudioSentence(null)
         setMultiAdded(false)
@@ -55,19 +57,27 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
                 play_audio(newAudio)
         }
     }
+
+    const handleSelectDeck = async() => {
+        const decks = await getDecks()
+        setDecks(decks)
+
+    }
     
     const handleAddMulti = async () => {
         try {
-            const data = await getLocalData(["deckInput","ankiFrontPrompt", "ankiBackPrompt", "pronunciationInput", "wordsSaved"])
+            const data = await getLocalData(["deckInput","ankiFrontPrompt", "ankiBackPrompt", "pronunciationInput", "wordsSaved", "ankimultiExamples"])
             // retrieve local variables
             
             const FrontStruct = data.ankiFrontPrompt
             const backStruct = data.ankiBackPrompt;
             const pronunciation = data.pronunciationInput
-        
+            const ankimultiExamplesPrompt = data.ankimultiExamples
             // Get anki card's back
-            const [phrases, explanations] = await getCards(word, backStruct, pronunciation);
-            
+            const [phrases, explanations] = await getCards(word, ankimultiExamplesPrompt,backStruct, pronunciation);
+            phrases.forEach((p)=>{
+                console.log(p)
+            })
             const deckName = data.deckInput ? data.deckInput.replace("$SOUND","").replace("$SENTENCE", "").replace("$WORD", "") : lang
             
             // Get Audio
@@ -178,11 +188,18 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
                     onClick={handleSoundWord}
                 />}
                 <div className="img-derecha">
+                    <select name="deck-select" id="deck-select" onClick={handleSelectDeck}>
+                        {
+                            decks.map((deck) =>(
+                                <option value="deck">{deck}</option>)
+                            )
+                        }
+                    </select>
                     {
                         (multiAdded || isKnownWord) && <img src={hat} className="hat-img"></img>
                     }
                     {
-                        (!multiAdded && !addError) && <img
+                        (!multiAdded && !addError && codeLang) && <img
                         src={add}
                         alt="add button"
                         className="add-img"
@@ -247,7 +264,7 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
                     />
                 }
                 {
-                    isNewPhrase && <img
+                    (isNewPhrase && codeLang) && <img
                     src={addGray}
                     alt="add button"
                     className="add-img"

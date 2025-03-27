@@ -1,7 +1,7 @@
 // /define/ endpoint related
 export const getCompletion = async (word, sentence, structure, pronMethod) =>
 {
-    console.log("fetching new")
+    console.log(word, sentence, structure, pronMethod)
     const response = await fetch("https://maomao-dict.onrender.com/define/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,12 +39,12 @@ export const getBack = async (word, sentence, structure, pronMethod) =>
 
 
 // /ankimulti/ endpoint related
-export const getCards = async (word, structure, pronMethod) =>
+export const getCards = async (word, front, back, pronMethod) =>
 {
     const ankiResponse = await fetch("https://maomao-dict.onrender.com/ankimulti/", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({word: word, structure: structure, pronunciation: pronMethod})
+        body: JSON.stringify({word: word, front:front, back:back, pronunciation: pronMethod})
     })
     const ankiResult = await ankiResponse.json()
     const ankiMulti = await ankiResult[0]
@@ -82,7 +82,6 @@ export const getExamples = async (word, lang) => {
 
 // localhost:8765 (anki) related
 export const storeMediaFiles = async (filename, file) => {
-    console.log(filename, !file)
     const storeMediaResponse = await fetch("http://localhost:8765", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -93,8 +92,7 @@ export const storeMediaFiles = async (filename, file) => {
         }),
     });
     const storeMediaResult = await storeMediaResponse.json();
-    console.log(storeMediaResult)
-    if (!storeMediaResult.result) console.error("Error while storing media files")
+    if (!storeMediaResult.result) error("Error while storing media files")
 }
 
 export const getDecks = async () => {
@@ -107,8 +105,10 @@ export const getDecks = async () => {
         })
     })
     const decksResult = await decksResponse.json()
-    const decks = await decksResult.result
+    const allDecks = await decksResult.result
+    const decks = await allDecks.filter(deck=>!deck.includes("::"))
     return decks
+
 }
 export const createDeck = async (name) => {
     await fetch("http://localhost:8765/", 
@@ -159,7 +159,6 @@ export const addMultipleNotes = async (deckName, audioFilenames, word, sentences
         const notePromises = sentences.map(async (sentence, index) => addNote(deckName, audioFilenames[index], word, sentence, frontStruct, explanations[index], fields))
     
         const results = await Promise.all(notePromises);
-        console.log(results)
         return results.map(result=> result.result)
     } catch(error) {
         setAddError(true)
@@ -175,7 +174,6 @@ export const addNote = async (deckName, audioFilename, word, sentence, frontStru
 
     const _ = frontStruct? frontStruct: "$SOUND $SENTENCE ($WORD)"
     const front = _.replace("$SOUND", `[sound:${audioFilename}]`).replace("$WORD", `${word}`).replace("$SENTENCE", `${sentence}`)
-    console.log({word:word, deckName:deckName, modelName: modelName, frontKey:frontKey, front:front, backKey:backKey, explanation:explanation})
     return fetch("http://localhost:8765", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 

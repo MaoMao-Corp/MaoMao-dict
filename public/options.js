@@ -7,6 +7,7 @@
     const ankiBackInput = document.getElementById("ankiBackInput");
     const pronInput = document.getElementById("pronunciationInput")
     const saveButton = document.getElementById("savePrompt");
+    const ankimultiExamples = document.getElementById("ankimultiExamples")
 
     // Elementos para la visualización de las palabras conocidas por idioma
     const languagesContainer = document.getElementById("languagesContainer");
@@ -14,7 +15,7 @@
     
     // Cargar la configuración guardada
     chrome.storage.local.get(
-        ["popupPrompt", "deckInput", "ankiFrontPrompt", "ankiBackPrompt", "pronunciationInput"],
+        ["popupPrompt", "deckInput", "ankiFrontPrompt", "ankiBackPrompt", "pronunciationInput", "ankimultiExamples"],
         (data) => {
         console.log(data)
         if (data.popupPrompt || data.popupPrompt=="") promptInput.value = data.popupPrompt;
@@ -22,6 +23,7 @@
         if (data.ankiFrontPrompt || data.popupPrompt=="") ankiFrontInput.value = data.ankiFrontPrompt;
         if (data.ankiBackPrompt || data.popupPrompt=="") ankiBackInput.value = data.ankiBackPrompt;
         if (data.pronunciationInput) pronInput.value=data.pronunciationInput
+        if (data.ankimultiExamples) ankimultiExamples.value= data.ankimultiExamples
         }
     );
 
@@ -123,7 +125,8 @@
         deckInput: deckInput.value,
         ankiFrontPrompt: ankiFrontInput.value,
         ankiBackPrompt: ankiBackInput.value,
-        pronunciationInput: pronInput.value
+        pronunciationInput: pronInput.value,
+        ankimultiExamples: ankimultiExamples.value
         });
         alert("Prompt saved!");
     });

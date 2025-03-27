@@ -64,10 +64,15 @@
 .sentence-block{
     display: flex;
     gap: 5px;
+    
 
 }
 .sentence
 {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     margin-top: 0 !important;
 }
 .audio-sentence
