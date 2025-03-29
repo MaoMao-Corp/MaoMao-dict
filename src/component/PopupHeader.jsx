@@ -6,7 +6,6 @@ import {
     getCards,
     storeMediaFiles,
     getDecks,
-    createDeck,
     getFieldNames,
     addMultipleNotes,
     addNote,

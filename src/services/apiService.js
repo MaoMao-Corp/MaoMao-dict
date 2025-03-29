@@ -44,6 +44,7 @@ export const getBack = async (word, sentence, structure, pronMethod) =>
 // /ankimulti/ endpoint related
 export const getCards = async (word, front, back, pronMethod) =>
 {
+    console.log(back)
     const ankiResponse = await fetch("https://maomao-dict.onrender.com/ankimulti/", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
@@ -95,6 +96,8 @@ export const storeMediaFiles = async (filename, file) => {
         }),
     });
     const storeMediaResult = await storeMediaResponse.json();
+    console.log(storeMediaResult)
+
     if (!storeMediaResult.result) error("Error while storing media files")
 }
 
@@ -157,12 +160,36 @@ export const getFieldNames = async () => {
   const modelField = await modelFieldResult.result
   return [...modelField, basic ]
 }
-export const addMultipleNotes = async (deckName, audioFilenames, word, sentences, frontStruct, explanations, fields) => {
+export const addMultipleNotes = async (deckName, audioFilenames, word, sentences, frontStruct, explanations) => {
     try{
-        const notePromises = sentences.map(async (sentence, index) => addNote(deckName, audioFilenames[index], word, sentence, frontStruct, explanations[index], fields))
-    
-        const results = await Promise.all(notePromises);
-        return results.map(result=> result.result)
+        let fields_ = {}
+        sentences.forEach((sentence, index) => {
+            const front = frontStruct.replace("$SOUND", `[sound:${audioFilenames[index]}]`).replace("$WORD", `${word}`).replace("$SENTENCE", `${sentence}`)
+            fields_[`F${index+1}`] = front;
+            fields_[`B${index+1}`] = explanations[index]
+        });
+        
+
+        return fetch("http://localhost:8765", { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify({
+                "action": "addNote",
+                "version": 6,
+                "params": {
+                    "note": {
+                        "deckName": "Korean Phrases",// XAMBIAR
+                        "modelName": "MaoMaoSiblings",
+                        "fields": fields_,
+                        "tags": ["miaumiau", word],
+                        "options": {
+                            "allowDuplicate": false
+                        }
+                    }
+                }
+            })
+        }).then(response=>response.json());
+
     } catch(error) {
         setAddError(true)
         console.error("Error while fetching localhost:8765 (anki connect api), MAKE SURE TO HAVE ANKI OPENED ;)", error)
@@ -185,7 +212,7 @@ export const addNote = async (deckName, audioFilename, word, sentence, frontStru
             "version": 6,
             "params": {
                 "note": {
-                    "deckName": deckName,
+                    "deckName": "Korean Phrases", // CAMBIAR
                     "modelName": modelName,
                     "fields": {
                         [frontKey]: front,
