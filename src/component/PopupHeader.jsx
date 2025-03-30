@@ -80,8 +80,10 @@ export function PopupHeader({word, sentence, definition, lang, codeLang, phoneti
             const ankiMultiFront = data.ankiMultiFront
             // Get anki card's back
             const [phrases, explanations] = await getCards(word, ankiMultiFront,backStruct, pronunciation);
-            phrases.forEach((p)=>{
-                console.log(p)
+            phrases.forEach((p, index)=>{
+                console.log(p, ":", explanations[index])
+                
+
             })
             
             // Get Audio

@@ -131,7 +131,8 @@ saveButton.addEventListener("click", () => {
 });
 
 document.getElementById("deck-load-button").addEventListener("click", async () => {
-    let deck = document.getElementById("deck-load-input").value
+    const deck = `deck:"${document.getElementById("deck-load-input").value}"`
+    console.log(deck)
     const response = await fetch("http://localhost:8765", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
@@ -139,11 +140,13 @@ document.getElementById("deck-load-button").addEventListener("click", async () =
             "action": "findCards",
             "version": 6,
             "params": {
-                "query":`deck:${deck}`
+                "query":deck
             }
         })
-        })
+    })
+    
     const results = await response.json()
+    console.log(results)
     const ids = await results.result
     console.log(ids)
     let wordsSaved = await new Promise((resolve) => {    chrome.storage.local.get("wordsSaved", data=>resolve(data.wordsSaved))    })
@@ -165,7 +168,7 @@ document.getElementById("deck-load-button").addEventListener("click", async () =
         try{
             const word = await tags.filter(item=>item!=="miaumiau")
             console.log(word[0])
-            const deck_ = deck.toLowerCase()
+            const deck_ = document.getElementById("deck-load-input").value
             wordsSaved ||= {}
             wordsSaved[deck_] ||= {}
             wordsSaved[deck_][word] ||= {}
