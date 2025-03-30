@@ -178,7 +178,7 @@ export const addMultipleNotes = async (deckName, audioFilenames, word, sentences
                 "version": 6,
                 "params": {
                     "note": {
-                        "deckName": "Korean Phrases",// XAMBIAR
+                        "deckName": deckName,// XAMBIAR
                         "modelName": "MaoMaoSiblings",
                         "fields": fields_,
                         "tags": ["miaumiau", word],
@@ -212,7 +212,7 @@ export const addNote = async (deckName, audioFilename, word, sentence, frontStru
             "version": 6,
             "params": {
                 "note": {
-                    "deckName": "Korean Phrases", // CAMBIAR
+                    "deckName": deckName,
                     "modelName": modelName,
                     "fields": {
                         [frontKey]: front,
