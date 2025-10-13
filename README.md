@@ -29,7 +29,7 @@ Ultra customizable browser extension with a popup dictionary to help language le
 git clone https://github.com/MaoMao-Corp/MaoMao-dict.git
 cd MaoMao-dict
 npm install
-npm run dev
+npm run build
 ```
 
 
