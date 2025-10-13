@@ -1,4 +1,9 @@
 # MaoMao Dict - Frontend
+![](https://img.shields.io/badge/javascript-%23323330.svg?style=flat&logo=javascript&logoColor=%23F7DF1E)
+![](https://img.shields.io/badge/react-%2320232a.svg?style=flat&logo=react&logoColor=%2361DAFB)
+![](https://img.shields.io/badge/typescript-%23007ACC.svg?style=flat&logo=typescript&logoColor=white)
+![](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=flat&logo=tailwind-css&logoColor=white)
+
 
 Ultra customizable browser extension with a popup dictionary to help language learners. Get instant definitions, pronunciation, and save words directly to Anki.
 
@@ -9,13 +14,6 @@ Ultra customizable browser extension with a popup dictionary to help language le
 - **Customizable Interface** - Personalize colors, fonts, and layout
 - **Multiple Languages** - Support for various language pairs
 - **Local Storage** - Keep your settings and history synced
-
-## Tech Stack
-
-![](https://img.shields.io/badge/javascript-%23323330.svg?style=flat&logo=javascript&logoColor=%23F7DF1E)
-![](https://img.shields.io/badge/react-%2320232a.svg?style=flat&logo=react&logoColor=%2361DAFB)
-![](https://img.shields.io/badge/typescript-%23007ACC.svg?style=flat&logo=typescript&logoColor=white)
-![](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=flat&logo=tailwind-css&logoColor=white)
 
 ## Installation
 
