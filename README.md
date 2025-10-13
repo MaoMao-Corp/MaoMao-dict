@@ -7,6 +7,8 @@
 
 Ultra customizable browser extension with a popup dictionary to help language learners. Get instant context definitions, pronunciation, and save words directly to Anki.
 
+❗ check also the [backend](https://github.com/MaoMao-Corp/MaoMao-dict-backend) ❗
+
 ## Features
 
 - **Popup Dictionary** - Quick contextual lookups in your browser
