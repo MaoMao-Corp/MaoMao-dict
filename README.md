@@ -5,15 +5,21 @@
 ![](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=flat&logo=tailwind-css&logoColor=white)
 
 
-Ultra customizable browser extension with a popup dictionary to help language learners. Get instant definitions, pronunciation, and save words directly to Anki.
+Ultra customizable browser extension with a popup dictionary to help language learners. Get instant context definitions, pronunciation, and save words directly to Anki.
 
 ## Features
 
-- **Popup Dictionary** - Quick word lookup in your browser
+- **Popup Dictionary** - Quick contextual lookups in your browser
+- **Audio Included** - Get always the correct pronunciation
 - **Anki Integration** - Save words and phrases directly to your Anki deck
-- **Customizable Interface** - Personalize colors, fonts, and layout
-- **Multiple Languages** - Support for various language pairs
+- **Customizable ASF** - Personalize the information recieved
+- **Language Invariant** - Support for ALL language pairs
 - **Local Storage** - Keep your settings and history synced
+
+## Showcase
+![](./showcase/schema.png)
+![](./showcase/linux.png)
+![](./showcase/newjeans.png)
 
 ## Installation
 
@@ -23,6 +29,7 @@ cd MaoMao-dict
 npm install
 npm run dev
 ```
+
 
 Load the extension in your browser:
 1. Open `chrome://extensions` (Chrome) or `about:debugging#/runtime/this-firefox` (Firefox)
