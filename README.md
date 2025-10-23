@@ -5,7 +5,7 @@
 ![](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=flat&logo=tailwind-css&logoColor=white)
 
 
-Ultra customizable browser extension with a popup dictionary to help language learners. Get instant context definitions, pronunciation, and save words directly to Anki.
+Ultra customizable browser extension with a popup dictionary to help language learners. Get instant context definitions, pronunciation, and save words directly to Anki. Based on the original Yomichan, leverages LLMs to bring more versatility to your learning experience.
 
 ❗ check also the [backend](https://github.com/MaoMao-Corp/MaoMao-dict-backend) ❗
 
