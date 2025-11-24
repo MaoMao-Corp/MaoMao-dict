@@ -21,10 +21,9 @@ Ultra customizable browser extension with a popup dictionary to help language le
 ## 🚧 Warning 🚧
 We now prioritize privacy, transparency and user empowerment. To reflect this shift in mindset, our project has evolved into a local dictionary that is both free of charge and free-as-in-freedom.
 
-
 Previously, we relied on OpenAI's API to provide the definitions. We now use a local language model that preserves privacy and gives full control to the user.
 
-Due to this, many of the parts that previously worked, now are in maintainment
+**Due to this, many of the features are being refactored**
 
 ## Showcase
 ![](./showcase/schema.png)
