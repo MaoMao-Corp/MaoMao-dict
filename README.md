@@ -5,7 +5,7 @@
 ![](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=flat&logo=tailwind-css&logoColor=white)
 
 
-Ultra customizable browser extension with a popup dictionary to help language learners. Get instant context definitions, pronunciation, and save words directly to Anki. Based on the original Yomichan, leverages LLMs to bring more versatility to your learning experience.
+Ultra customizable browser extension with a popup dictionary to help language learners. Get instant context definitions, pronunciation, and save words directly to Anki. Leverages self-attention to bring more versatility to your learning experience.
 
 ❗ check also the [backend](https://github.com/MaoMao-Corp/MaoMao-dict-backend) ❗
 
@@ -17,6 +17,14 @@ Ultra customizable browser extension with a popup dictionary to help language le
 - **Customizable ASF** - Personalize the information recieved
 - **Language Invariant** - Support for ALL language pairs
 - **Local Storage** - Keep your settings and history synced
+
+## 🚧 Warning 🚧
+We now prioritize privacy, transparency and user empowerment. To reflect this shift in mindset, our project has evolved into a local dictionary that is both free of charge and free-as-in-freedom.
+
+
+Previously, we relied on OpenAI's API to provide the definitions. We now use a local language model that preserves privacy and gives full control to the user.
+
+Due to this, many of the parts that previously worked, now are in maintainment
 
 ## Showcase
 ![](./showcase/schema.png)
